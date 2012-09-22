@@ -8,6 +8,10 @@ Window::~Window() {
 
 }
 
+HWND Window::handle() {
+	return m_hWindow;
+}
+
 bool Window::initWindowClass(UINT style, LPCWSTR className) {
 	// check for correct string..
 	m_className = className;

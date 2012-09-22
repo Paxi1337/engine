@@ -11,12 +11,14 @@ typedef LRESULT (__stdcall *MSGCALLBACK) (HWND, UINT, WPARAM, LPARAM);
 
 class Window {
 public:
-	explicit Window(const HINSTANCE hInstance, int nCmdShow);
+	Window(const HINSTANCE hInstance, int nCmdShow);
 	~Window();
 
-	bool __thiscall initWindowClass(UINT style, LPCWSTR className);
-	bool __thiscall createWindow(LPCWSTR title, int x, int y, int width, int height);
-	int __thiscall run();
+	bool initWindowClass(UINT style, LPCWSTR className);
+	bool createWindow(LPCWSTR title, int x, int y, int width, int height);
+	int run();
+
+	HWND inline handle();
 
 	static LRESULT __stdcall messageCallback(HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam);
 
