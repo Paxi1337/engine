@@ -6,7 +6,7 @@ class RenderEngine {
 public:
 	virtual ~RenderEngine();
 	virtual void release() = 0; 
-	virtual void onCreateDevice() = 0; 
+	virtual void onCreateDevice(HWND hWindow) = 0; 
 	virtual void onResetDevice() = 0; 
 	virtual void onLostDevice() = 0; 
 	virtual void onDestroyDevice() = 0; 

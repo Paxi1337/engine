@@ -8,8 +8,20 @@ class DirectX9 : public RenderEngine {
 public:
 	DirectX9();
 	~DirectX9();
-private:
 
+	void release(); 
+	void onCreateDevice(const HWND hWindow); 
+	void onResetDevice(); 
+	void onLostDevice(); 
+	void onDestroyDevice(); 
+	void onUpdateFrame(); 
+	void onRenderFrame(); 
+	void onKeyDown();
+
+private:
+	LPDIRECT3DDEVICE9 m_pDevice;
+	LPDIRECT3D9 m_pD3D;
+	HWND m_hWindow;
 
 };
 
