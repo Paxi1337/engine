@@ -1,5 +1,5 @@
-#ifndef __RENDERENGINE_H
-#define __RENDERENGINE_H
+#ifndef __MATRIX3_H
+#define __MATRIX3_H
 
 #include "DirectX9.h"
 

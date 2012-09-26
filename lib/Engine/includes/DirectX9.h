@@ -4,6 +4,9 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 
+
+class Matrix3;
+
 typedef const int STATE;
 
 class DirectX9 {
@@ -18,8 +21,18 @@ public:
 	
 	inline LPDIRECT3DDEVICE9 getD3D9Device() const;
 	void setRenderState(DWORD, const int);
-	void lockVertexBuffer();
-	void unlockVertexBuffer();
+
+	LPDIRECT3DVERTEXBUFFER9 createVertexBuffer(int sizeOfCustomVertexStruct);
+	LPDIRECT3DINDEXBUFFER9 createIndexBuffer();
+	LPD3DXMESH createMesh();
+	
+	void worldTransform(Matrix3*);
+	void viewTransform();
+	void perspectiveProjection();
+	void orthoProjection();	
+	void setFVF();	
+
+	void render();
 
 	
 	// states see http://msdn.microsoft.com/en-us/library/windows/desktop/bb172599(v=vs.85).aspx
@@ -53,9 +66,32 @@ public:
 	static STATE COLOR_AMBIENT = D3DRS_AMBIENTMATERIALSOURCE;
 	
 private:
+
+	inline int calcPrimitiveCount();
+
 	LPDIRECT3DDEVICE9 m_pDevice;
 	LPDIRECT3D9 m_pD3D;
-	HWND m_hWindow;    
+	HWND m_hWindow;
+	
+	int m_sizeOfVertex;
+	int m_vertexCount;
+	int m_primitiveCount;
+
+	/**
+		typedef enum D3DPRIMITIVETYPE { 
+		  D3DPT_POINTLIST       = 1,
+		  D3DPT_LINELIST        = 2,
+		  D3DPT_LINESTRIP       = 3,
+		  D3DPT_TRIANGLELIST    = 4,
+		  D3DPT_TRIANGLESTRIP   = 5,
+		  D3DPT_TRIANGLEFAN     = 6,
+		  D3DPT_FORCE_DWORD     = 0x7fffffff 
+		} D3DPRIMITIVETYPE, *LPD3DPRIMITIVETYPE;
+	*/
+	D3DPRIMITIVETYPE m_primitiveType;
+
+	
+	D3DFVF m_FVF;    
 
 };
 
