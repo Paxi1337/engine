@@ -91,7 +91,7 @@ private:
 	D3DPRIMITIVETYPE m_primitiveType;
 
 	
-	D3DFVF m_FVF;    
+	//D3DFVF m_FVF;    
 
 };
 
