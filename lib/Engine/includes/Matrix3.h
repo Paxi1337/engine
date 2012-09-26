@@ -6,8 +6,8 @@
 class Matrix3
 {
 public:
-	Matrix3(void);
-	~Matrix3(void);
+	Matrix3();
+	~Matrix3();
 
 	// implicit conversion functions
 	operator D3DXMATRIX* ();
