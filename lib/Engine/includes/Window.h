@@ -4,7 +4,10 @@
 #include <Windows.h>
 #include <cstdio>
 
+#include "RenderEngine.h"
+
 // HINSTANCE = HANDLE = INT32
+ 
 
 
 typedef LRESULT (__stdcall *MSGCALLBACK) (HWND, UINT, WPARAM, LPARAM);
@@ -16,9 +19,10 @@ public:
 
 	bool initWindowClass(UINT style, LPCWSTR className);
 	bool createWindow(LPCWSTR title, int x, int y, int width, int height);
+	void setRenderEngine(RenderEngine const *renderEngine);
 	int run();
 
-	HWND inline handle();
+	HWND handle();
 
 	static LRESULT __stdcall messageCallback(HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam);
 
@@ -38,6 +42,8 @@ private:
 	int m_nCmdShow;
 
 	LRESULT __stdcall messageCallbackInternal(HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam);
+
+	RenderEngine* m_renderEngine;
 };
 
 #endif
