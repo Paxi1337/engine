@@ -1,12 +1,23 @@
 #include "../includes/Window.h"
+#include "../includes/DirectX9.h"
 
-Window::Window(const HINSTANCE hInstance, int nCmdShow) : m_hInstance(hInstance), m_windowCallBackFunction(messageCallback), m_nCmdShow(nCmdShow) {
+//int Window::bInitialized = 0;
+
+Window::Window(const HINSTANCE hInstance, int nCmdShow) : m_hInstance(hInstance),
+														  m_windowCallBackFunction(messageCallback),		
+														  m_nCmdShow(nCmdShow),
+														  m_runningApp(NULL),
+														  m_renderDevice(NULL) {
 	memset(&m_windowClassEx, '\0', sizeof(WNDCLASSEX));
 }
 
 Window::~Window() {
 
 }
+
+//int Window::isInitialized() {
+//	return bInitialized;
+//}
 
 HWND Window::handle() {
 	return m_hWindow;
@@ -18,7 +29,7 @@ bool Window::initWindowClass(UINT style, LPCWSTR className) {
 
 	m_windowClassEx.cbSize = sizeof(WNDCLASSEX);
 	m_windowClassEx.style = style;
-	m_windowClassEx.lpfnWndProc = Window::m_windowCallBackFunction;
+	m_windowClassEx.lpfnWndProc = m_windowCallBackFunction;
 	m_windowClassEx.hInstance = m_hInstance;
 	m_windowClassEx.hCursor = LoadCursor(NULL, IDC_ARROW);
 	m_windowClassEx.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW);
@@ -27,6 +38,8 @@ bool Window::initWindowClass(UINT style, LPCWSTR className) {
 	if(RegisterClassEx(&m_windowClassEx)) {
 		return true;	
 	}
+
+	
 
 	// debuginfo here
 	// omitting return value from GetLastError() for now
@@ -38,10 +51,11 @@ bool Window::initWindowClass(UINT style, LPCWSTR className) {
 bool Window::createWindow(LPCWSTR title, int x, int y, int width, int height) {
 	// passing in this pointer as optional param (lpParam) for using it later to access internal method in static message callback function
 	m_hWindow = CreateWindowEx(NULL, m_className, title, WS_OVERLAPPEDWINDOW, x, y, width, height, NULL, NULL, m_hInstance, this);
-
+	
 	if(m_hWindow) {
 		
 		if(ShowWindow(m_hWindow, m_nCmdShow)) {
+			//Window::bInitialized = 1;
 			return true;
 		}
 		else {
@@ -81,8 +95,11 @@ int Window::run() {
             break;
 
         // render code
-
-
+		
+		if(m_runningApp) {
+			m_runningApp->OnUpdate();
+			m_runningApp->OnRender();
+		}
 
     }
 

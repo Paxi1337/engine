@@ -8,24 +8,52 @@ DirectX9::~DirectX9() {
 
 }
 
-void DirectX9::init(HWND window) {
+void DirectX9::init() {
+	m_pD3D = Direct3DCreate9(D3D_SDK_VERSION);
 
+	// struct that holds informations provided to the video card
+	D3DPRESENT_PARAMETERS dev_info;
+
+	ZeroMemory(&dev_info, sizeof(dev_info));
+	
+	dev_info.BackBufferCount = 1; // 1 backbuffer (double buffering)
+	dev_info.SwapEffect = D3DSWAPEFFECT_DISCARD; // discard previous frame
+	dev_info.MultiSampleType = D3DMULTISAMPLE_NONE; // no multisampling
+	dev_info.MultiSampleQuality = 0; // no multisampling
+	//dev_info.hDeviceWindow = Window::m_hWindow;
+	dev_info.Flags = 0;
+	dev_info.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
+	dev_info.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+	dev_info.EnableAutoDepthStencil = true; // z-buffer
+	dev_info.AutoDepthStencilFormat = D3DFMT_D16;
+	dev_info.BackBufferFormat = D3DFMT_X8R8G8B8;
+#ifndef FULLSCREEN
+	dev_info.Windowed = true;
+#else
+	dev_info.Windowed = false;
+	dev_info.BackBufferWidth = WINDOW_WIDTH;
+	dev_info.BackBufferHeight = WINDOW_HEIGHT;
+#endif
+
+	HRESULT result;
+
+	result = m_pD3D->CreateDevice(D3DADAPTER_DEFAULT,
+							   D3DDEVTYPE_HAL,
+							   DirectX9::m_hWindow,
+							   D3DCREATE_SOFTWARE_VERTEXPROCESSING,
+							   &dev_info,
+							   &m_pDevice);
 }
 
 void DirectX9::release() {
 
 }
 
-void* DirectX9::getRenderDevice() const {
-
-
-	return reinterpret_cast<void*>(m_pDevice);
-}
 
 LPDIRECT3DDEVICE9 DirectX9::getD3D9Device() const {
 	return m_pDevice;
 }
 
-void DirectX9::setRenderState(const int state, const int value) {
+void DirectX9::setRenderState(DWORD state, const int value) {
 	m_pDevice->SetRenderState(static_cast<D3DRENDERSTATETYPE>(state),value);
 }
