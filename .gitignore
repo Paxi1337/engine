@@ -9,5 +9,5 @@
 /lib/Engine/Engine.vcxproj.filters
 /lib/Engine/Engine.vcxproj.user
 /lib/Debug/*
-
+/lib/ipch/*
 

@@ -36,9 +36,11 @@ bool Window::initWindowClass(UINT style, LPCWSTR className) {
 	m_windowClassEx.lpszClassName = m_className;
 
 	if(RegisterClassEx(&m_windowClassEx)) {
+		
 		return true;	
 	}
 
+	
 	
 
 	// debuginfo here
@@ -55,7 +57,7 @@ bool Window::createWindow(LPCWSTR title, int x, int y, int width, int height) {
 	if(m_hWindow) {
 		
 		if(ShowWindow(m_hWindow, m_nCmdShow)) {
-			//Window::bInitialized = 1;
+			m_renderDevice->init(m_hWindow);
 			return true;
 		}
 		else {
