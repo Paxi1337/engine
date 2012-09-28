@@ -17,7 +17,6 @@
 //	D3DPT_FORCE_DWORD     = 0x7fffffff 
 //} D3DPRIMITIVETYPE, *LPD3DPRIMITIVETYPE;
 typedef D3DPRIMITIVETYPE T_PRIMITIVE;
-
 // http://msdn.microsoft.com/en-us/library/windows/desktop/bb172599(v=vs.85).aspx
 typedef D3DRENDERSTATETYPE T_RENDERSTATE;
 
@@ -98,7 +97,7 @@ private:
 	// calculates the amount of primitives that have to be drawn within render method
 	inline int calcPrimitiveCount(T_PRIMITIVE renderType, const DWORD numberOfVertices);
 
-	LPDIRECT3DDEVICE9 m_pDevice;
+	LPDIRECT3DDEVICE9 m_pDevice; 
 	LPDIRECT3D9 m_pD3D;
 
 	std::map<std::string,LPDIRECT3DVERTEXBUFFER9> m_vertexBuffers;
