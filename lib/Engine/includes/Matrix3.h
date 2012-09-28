@@ -3,11 +3,21 @@
 
 #include "DirectX9.h"
 
+
+/*
+	wrapper class for D3DXMATRIX struct (at least for now)
+	implement all necessary operators
+	implement functions for frequently used matrix operations (static)
+*/
+
+
 class Matrix3
 {
 public:
 	Matrix3();
 	~Matrix3();
+
+
 
 	// implicit conversion functions
 	operator D3DXMATRIX* ();
@@ -15,6 +25,7 @@ public:
 
 private:
 	const D3DXMATRIX mMatrix;
+	static int test;
 };
 
 #endif

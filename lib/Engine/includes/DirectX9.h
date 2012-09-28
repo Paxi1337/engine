@@ -4,7 +4,6 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 
-
 class Matrix3;
 
 typedef const int STATE;
@@ -69,7 +68,7 @@ private:
 
 	inline int calcPrimitiveCount();
 
-	LPDIRECT3DDEVICE9 m_pDevice;
+	LPDIRECT3DDEVICE9 m_pDevice; 
 	LPDIRECT3D9 m_pD3D;
 	HWND m_hWindow;
 	
