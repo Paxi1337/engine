@@ -97,6 +97,11 @@ int Window::run() {
 			m_runningApp->OnRender();
 		}
 
+		//LPDIRECT3DDEVICE9 d = m_renderDevice->getD3D9Device();
+
+		m_renderDevice->getD3D9Device()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(255, 0, 0), 1.0f, 0);
+		
+		m_renderDevice->getD3D9Device()->Present(NULL,NULL,NULL,NULL);
     }
 
 	return msg.wParam;

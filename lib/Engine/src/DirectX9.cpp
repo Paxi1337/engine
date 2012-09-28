@@ -1,11 +1,15 @@
 #include "../includes/DirectX9.h"
 
-DirectX9::DirectX9() {
-	m_vertexBuffers = new std::map<std::string,LPDIRECT3DVERTEXBUFFER9>();
+DirectX9::DirectX9() : m_pDevice(NULL), m_pD3D(NULL), m_runningApp(NULL) {
+	
+}
+
+DirectX9::DirectX9(App* currentApp) : m_pDevice(NULL), m_pD3D(NULL), m_runningApp(currentApp) {
+
 }
 
 DirectX9::~DirectX9() {
-
+	release();
 }
 
 void DirectX9::init(HWND window) {
@@ -43,24 +47,38 @@ void DirectX9::init(HWND window) {
 							   D3DCREATE_SOFTWARE_VERTEXPROCESSING,
 							   &dev_info,
 							   &m_pDevice);
+
+	
+
+	if(m_runningApp)
+		m_runningApp->OnCreateDevice();
+}
+
+LPDIRECT3DDEVICE9 DirectX9::getD3D9Device() {
+	return m_pDevice;
 }
 
 void DirectX9::release() {
+
 	std::map<std::string,LPDIRECT3DVERTEXBUFFER9>::iterator iter;
 	iter = m_vertexBuffers.begin();
 	while(iter!=m_vertexBuffers.end()) {
 		iter->second->Release();
 		++iter;
 	}
+
 	m_pDevice->Release();
 	m_pD3D->Release();
 }
 
 
-LPDIRECT3DDEVICE9 DirectX9::getD3D9Device() const {
-	return m_pDevice;
-}
 
-void DirectX9::setRenderState(D3DRENDERSTATETYPE renderState, const DWORD value) {
+void DirectX9::setRenderState(T_RENDERSTATE renderState, const DWORD value) {
 	m_pDevice->SetRenderState(renderState, value);
 }
+
+void DirectX9::setTransform(T_TRANSFORM transformState, const D3DMATRIX* pMatrix) {
+	m_pDevice->SetTransform(transformState, pMatrix);
+}
+
+//void DirectX9::render(T_)

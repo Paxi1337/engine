@@ -33,7 +33,7 @@ typedef D3DRENDERSTATETYPE T_RENDERSTATE;
 //	D3DTS_TEXTURE7      = 23,
 //	D3DTS_FORCE_DWORD   = 0x7fffffff 
 //} D3DTRANSFORMSTATETYPE, *LPD3DTRANSFORMSTATETYPE;
-typedef D3DTRANSFORMSTATETYPE T_TRASFORM;
+typedef D3DTRANSFORMSTATETYPE T_TRANSFORM;
 
 struct CustomVertex3ColorUV {
 	D3DXVECTOR3 xyz;
@@ -54,6 +54,7 @@ class DirectX9 {
 
 public:
 	DirectX9();
+	explicit DirectX9(App* currentApp);
 	~DirectX9();
 
 	// releases DirectX interfaces
@@ -65,14 +66,15 @@ public:
 
 	// TODO toggleFullscreen();
 	
+
 	// get pointer to IDirect3DDevice interface
-	inline LPDIRECT3DDEVICE9 getD3D9Device() const;
+	inline LPDIRECT3DDEVICE9 getD3D9Device();
 	
 	// render states
 	void setRenderState(T_RENDERSTATE rederState, const DWORD value);
 	
 	// transforms
-	void setTransform(T_TRASFORM transformState, const D3DMATRIX* pMatrix);
+	void setTransform(T_TRANSFORM transformState, const D3DMATRIX* pMatrix);
 
 	// vertex buffer functions
 	LPDIRECT3DVERTEXBUFFER9 createVertexBuffer(const DWORD numberOfVertices, const DWORD FVF, std::string tag);
