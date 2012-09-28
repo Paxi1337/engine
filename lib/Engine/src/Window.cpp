@@ -7,7 +7,7 @@ Window::Window(const HINSTANCE hInstance, int nCmdShow) : m_hInstance(hInstance)
 														  m_windowCallBackFunction(messageCallback),		
 														  m_nCmdShow(nCmdShow),
 														  m_runningApp(NULL),
-														  m_renderDevice(NULL) {
+														  m_renderDevice(new DirectX9()) {
 	memset(&m_windowClassEx, '\0', sizeof(WNDCLASSEX));
 }
 
@@ -56,16 +56,10 @@ bool Window::createWindow(LPCWSTR title, int x, int y, int width, int height) {
 	
 	if(m_hWindow) {
 		
-		if(ShowWindow(m_hWindow, m_nCmdShow)) {
-			m_renderDevice->init(m_hWindow);
-			return true;
-		}
-		else {
-			// debuginfo here
-			// omitting return value from GetLastError() for now
-			GetLastError();
-			return false;
-		}
+		ShowWindow(m_hWindow, m_nCmdShow);
+		m_renderDevice->init(m_hWindow);
+		return true;
+		
 	}
 
 	// debuginfo here

@@ -101,7 +101,7 @@ private:
 	LPDIRECT3DDEVICE9 m_pDevice;
 	LPDIRECT3D9 m_pD3D;
 
-	std::map<std::string,LPDIRECT3DVERTEXBUFFER9> vertexBuffers;
+	std::map<std::string,LPDIRECT3DVERTEXBUFFER9> m_vertexBuffers;
 	
 	App* m_runningApp;
 };

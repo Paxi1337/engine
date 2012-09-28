@@ -1,7 +1,7 @@
 #include "../includes/DirectX9.h"
 
 DirectX9::DirectX9() {
-
+	m_vertexBuffers = new std::map<std::string,LPDIRECT3DVERTEXBUFFER9>();
 }
 
 DirectX9::~DirectX9() {
@@ -14,7 +14,7 @@ void DirectX9::init(HWND window) {
 	// struct that holds informations provided to the video card
 	D3DPRESENT_PARAMETERS dev_info;
 
-	ZeroMemory(&dev_info, sizeof(dev_info));
+	memset(&dev_info,'\0', sizeof(dev_info));
 	
 	dev_info.BackBufferCount = 1; // 1 back buffer (double buffering)
 	dev_info.SwapEffect = D3DSWAPEFFECT_DISCARD; // discard previous frame
@@ -46,10 +46,14 @@ void DirectX9::init(HWND window) {
 }
 
 void DirectX9::release() {
-	
-
-
+	std::map<std::string,LPDIRECT3DVERTEXBUFFER9>::iterator iter;
+	iter = m_vertexBuffers.begin();
+	while(iter!=m_vertexBuffers.end()) {
+		iter->second->Release();
+		++iter;
+	}
 	m_pDevice->Release();
+	m_pD3D->Release();
 }
 
 
