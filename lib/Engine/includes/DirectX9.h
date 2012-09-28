@@ -9,6 +9,11 @@ class Matrix3;
 
 typedef const int STATE;
 
+//struct VertbufferInfo {
+//	LPDIRECT3DVERTEXBUFFER9 vertexBuffer;
+//	int sizeOfCustomVertexStruct;
+//};
+
 class DirectX9 {
 	friend class Window;
 
@@ -91,7 +96,7 @@ private:
 	D3DPRIMITIVETYPE m_primitiveType;
 
 	
-	//D3DFVF m_FVF;    
+	DWORD m_FVF;    
 
 };
 
