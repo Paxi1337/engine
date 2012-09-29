@@ -5,10 +5,12 @@ class App {
 	
 public :
 	virtual ~App() {};
-	virtual void OnCreateDevice() = 0;
-	virtual void OnResetDevice() = 0;
-	virtual void OnUpdate() = 0;
-	virtual void OnRender() = 0;
+	virtual void onCreateDevice() = 0;
+	virtual void onResetDevice() = 0;
+	virtual void onReleaseDevice() = 0;
+	virtual void onUpdate() = 0;
+	virtual void onRender() = 0;
+	virtual void onLostDevice() = 0;
 };
 
 #endif

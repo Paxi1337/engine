@@ -7,6 +7,13 @@
 #include <string>
 #include <map>
 
+typedef struct VertexbufferInfo {
+	LPDIRECT3DVERTEXBUFFER9 buffer;
+	DWORD FVF;
+	DWORD vertexCount;
+} *PVertexbufferInfo; 
+
+
 //typedef enum D3DPRIMITIVETYPE { 
 //	D3DPT_POINTLIST       = 1,
 //	D3DPT_LINELIST        = 2,
@@ -51,7 +58,7 @@ struct CustomVertex3Color {
 #define CUSTOMVERTEX3COLORFORMAT (D3DFVF_XYZ | D3DFVF_DIFFUSE)
 
 class DirectX9 {
-
+	friend class Window;
 public:
 	DirectX9();
 	explicit DirectX9(App* currentApp);
@@ -68,7 +75,7 @@ public:
 	
 
 	// get pointer to IDirect3DDevice interface
-	inline LPDIRECT3DDEVICE9 getD3D9Device();
+	LPDIRECT3DDEVICE9 getD3D9Device() const;
 	
 	// render states
 	void setRenderState(T_RENDERSTATE rederState, const DWORD value);
@@ -77,7 +84,7 @@ public:
 	void setTransform(T_TRANSFORM transformState, const D3DMATRIX* pMatrix);
 
 	// vertex buffer functions
-	LPDIRECT3DVERTEXBUFFER9 createVertexBuffer(const DWORD numberOfVertices, const DWORD FVF, std::string tag);
+	VertexbufferInfo* createVertexBuffer(const DWORD numberOfVertices, const DWORD FVF, std::string tag);
 	// the customVertex FVF has to be exactly as defined in the associated buffer 
 	void setVertexBufferData(std::string tag, void* customVertices);
 	
@@ -89,20 +96,27 @@ public:
 
 	// render given vertex buffer 
 	// important: it is assumed that you provide the correct information about the size of the customVertexStruct and their amount
-	void render(T_PRIMITIVE type, LPDIRECT3DVERTEXBUFFER9 bufferToRender, const DWORD sizeOfCustomVertex, const DWORD numberOfVertices);
+	void renderVertexbuffer(T_PRIMITIVE type, std::string tag);
+	void renderAllVertexbuffers();
+
 	
+
 	// http://www.mvps.org/directx/articles/d3dxmesh.htm
 	// TODO LPD3DXMESH createMesh();
 	
 private:
 
 	// calculates the amount of primitives that have to be drawn within render method
-	inline int calcPrimitiveCount(T_PRIMITIVE renderType, const DWORD numberOfVertices);
+	int calcPrimitiveCount(T_PRIMITIVE renderType, const DWORD numberOfVertices);
+	int calcCustomStructSize(DWORD FVF);
+
+	void renderFrame();
+
 
 	LPDIRECT3DDEVICE9 m_pDevice; 
 	LPDIRECT3D9 m_pD3D;
 
-	std::map<std::string,LPDIRECT3DVERTEXBUFFER9> m_vertexBuffers;
+	std::map<std::string,VertexbufferInfo*> m_vertexBuffers;
 	
 	App* m_runningApp;
 };

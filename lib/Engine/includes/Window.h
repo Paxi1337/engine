@@ -9,7 +9,7 @@
 typedef LRESULT (__stdcall *MSGCALLBACK) (HWND, UINT, WPARAM, LPARAM);
 
 class Window {
-
+	
 public:
 	Window(const HINSTANCE hInstance, int nCmdShow);
 	~Window();

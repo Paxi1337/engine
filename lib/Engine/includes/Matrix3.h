@@ -13,6 +13,9 @@
 
 class Matrix3
 {
+
+	friend class DirectX9;
+
 public:
 	Matrix3();
 	~Matrix3();
