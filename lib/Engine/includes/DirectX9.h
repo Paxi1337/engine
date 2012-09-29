@@ -11,6 +11,7 @@ typedef struct VertexbufferInfo {
 	LPDIRECT3DVERTEXBUFFER9 buffer;
 	DWORD FVF;
 	DWORD vertexCount;
+
 } *PVertexbufferInfo; 
 
 
@@ -42,19 +43,23 @@ typedef D3DRENDERSTATETYPE T_RENDERSTATE;
 //} D3DTRANSFORMSTATETYPE, *LPD3DTRANSFORMSTATETYPE;
 typedef D3DTRANSFORMSTATETYPE T_TRANSFORM;
 
+struct CustomVertexTransformedColor {
+	FLOAT x,y,z,rhw;
+	DWORD color;
+};
+#define CUSTOMVERTEXTRANSFORMEDCOLORFORMAT (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
+
 struct CustomVertex3ColorUV {
 	D3DXVECTOR3 xyz;
 	DWORD color;
 	DWORD u,v;
 };
-
 #define CUSTOMVERTEX3COLORUVFORMAT (D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1)
 
 struct CustomVertex3Color {
 	D3DXVECTOR3 xyz;
 	DWORD color;
 };
-
 #define CUSTOMVERTEX3COLORFORMAT (D3DFVF_XYZ | D3DFVF_DIFFUSE)
 
 class DirectX9 {

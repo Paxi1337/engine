@@ -32,7 +32,7 @@ void DirectX9::init(HWND window) {
 	dev_info.Flags = 0;
 	dev_info.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
 	dev_info.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
-	dev_info.EnableAutoDepthStencil = true; // z-buffer
+	//dev_info.EnableAutoDepthStencil = true; // z-buffer
 	dev_info.AutoDepthStencilFormat = D3DFMT_D16;
 	dev_info.BackBufferFormat = D3DFMT_X8R8G8B8;
 #ifndef FULLSCREEN
@@ -99,13 +99,15 @@ int DirectX9::calcCustomStructSize(DWORD FVF) {
 			return sizeof(CustomVertex3ColorUV);
 		case CUSTOMVERTEX3COLORFORMAT:
 			return sizeof(CustomVertex3Color);
+		case CUSTOMVERTEXTRANSFORMEDCOLORFORMAT:
+			return sizeof(CustomVertexTransformedColor);
 		default: return -1;
 	}
 
 }
 
-void DirectX9::setRenderState(T_RENDERSTATE renderState, const DWORD value) {
-	m_pDevice->SetRenderState(renderState, value);
+void DirectX9::setRenderState(T_RENDERSTATE renderState, const DWORD stateValue) {
+	m_pDevice->SetRenderState(renderState, stateValue);
 }
 
 void DirectX9::setTransform(T_TRANSFORM transformState, const D3DMATRIX* pMatrix) {
@@ -114,7 +116,7 @@ void DirectX9::setTransform(T_TRANSFORM transformState, const D3DMATRIX* pMatrix
 
 void DirectX9::renderFrame() {
 
-	m_pDevice->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 255, 0), 1.0f, 0);
+	m_pDevice->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
 
 	m_pDevice->BeginScene();
 	
@@ -147,16 +149,22 @@ void DirectX9::renderFrame() {
 
 VertexbufferInfo* DirectX9::createVertexBuffer(const DWORD numberOfVertices, const DWORD FVF, const std::string tag) {
 
-	if(FVF != D3DPT_POINTLIST && FVF != D3DPT_LINELIST && FVF != D3DPT_TRIANGLELIST)
+	if(FVF != CUSTOMVERTEX3COLORFORMAT && FVF != CUSTOMVERTEX3COLORUVFORMAT && FVF != CUSTOMVERTEXTRANSFORMEDCOLORFORMAT)
 		return NULL;
 
 	VertexbufferInfo* info = new VertexbufferInfo;
-	info->FVF = FVF;
-	info->vertexCount = numberOfVertices;
 
 	int vertexStructSize = calcCustomStructSize(FVF);
 
+	// create the vertex buffer before otherwise the call to CreateVertexBuffer will zero out the next DWORD in the VertexBufferInfo struct
 	info->FVF = m_pDevice->CreateVertexBuffer(numberOfVertices*vertexStructSize, 0, FVF, D3DPOOL_MANAGED, &info->buffer, NULL);
+
+	info->FVF = FVF;
+	info->vertexCount = numberOfVertices;
+
+	
+
+	
 
 	m_vertexBuffers[tag] = info;
 	return info;
@@ -166,9 +174,32 @@ void DirectX9::setVertexBufferData(std::string tag, void* customVertices) {
 	
 	VertexbufferInfo* vb = m_vertexBuffers[tag];
 	int vertexStructSize = calcCustomStructSize(vb->FVF);
-
-	void *vram;
+	
+	if(vertexStructSize == -1) 
+		return;
+	
+	void* vram;
 	vb->buffer->Lock(0, vb->vertexCount*vertexStructSize, &vram, 0);
 	memcpy(vram,customVertices,vb->vertexCount*vertexStructSize);
 	vb->buffer->Unlock();
+}
+
+void DirectX9::renderVertexbuffer(T_PRIMITIVE type, std::string tag) {
+	VertexbufferInfo* vb = m_vertexBuffers[tag];
+	if(vb) {
+		int vertexStructSize = calcCustomStructSize(vb->FVF);
+		int primitiveCount = calcPrimitiveCount(type, vb->vertexCount);
+
+		if(FAILED(m_pDevice->SetFVF(vb->FVF))) {
+			return;
+		}
+
+		if(FAILED(m_pDevice->SetStreamSource(0, vb->buffer, 0, vertexStructSize))){
+			return;
+		}
+
+		if(FAILED(m_pDevice->DrawPrimitive(type,0,primitiveCount))) {
+			return;
+		}
+	}
 }

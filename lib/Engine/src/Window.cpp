@@ -99,8 +99,8 @@ int Window::run() {
             break;
 
         // render code
-		
-		m_renderDevice->renderFrame();
+		if(m_renderDevice)
+			m_renderDevice->renderFrame();
 
     }
 
