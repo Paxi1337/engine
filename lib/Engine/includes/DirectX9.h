@@ -63,6 +63,7 @@ struct CustomVertex3Color {
 
 class DirectX9 {
 	friend class Window;
+
 public:
 	DirectX9();
 	explicit DirectX9(App* currentApp);
@@ -70,12 +71,14 @@ public:
 
 	// releases DirectX interfaces
 	void release();
+	void onRelease();
 
 	// initialized DirectX
 	// TODO options for window
-	void init(HWND hWindow);
-	void afterInit();
-	void setApp(App* runningApp);
+	void createDevice(HWND hWindow);
+	
+
+	void attachApp(App* runningApp);
 
 	// TODO toggleFullscreen();
 	
@@ -114,10 +117,12 @@ private:
 
 	// calculates the amount of primitives that have to be drawn within render method
 	int calcPrimitiveCount(T_PRIMITIVE renderType, const DWORD numberOfVertices);
+	// calculates the size of the custom vertex struct defined by the FVF
 	int calcCustomStructSize(DWORD FVF);
-
+	// calls the user defined onUpdate and onRender method from the current active app
 	void renderFrame();
-
+	// calls the user defined onCreateDevice method from the current active app
+	void onCreateDevice();
 
 	LPDIRECT3DDEVICE9 m_pDevice; 
 	LPDIRECT3D9 m_pD3D;

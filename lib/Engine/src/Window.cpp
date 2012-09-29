@@ -15,15 +15,8 @@ Window::~Window() {
 
 }
 
-//int Window::isInitialized() {
-//	return bInitialized;
-//}
-
-HWND Window::handle() {
-	return m_hWindow;
-}
-
 bool Window::initWindowClass(UINT style, LPCWSTR className) {
+	
 	// check for correct string..
 	m_className = className;
 
@@ -35,13 +28,9 @@ bool Window::initWindowClass(UINT style, LPCWSTR className) {
 	m_windowClassEx.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW);
 	m_windowClassEx.lpszClassName = m_className;
 
-	if(RegisterClassEx(&m_windowClassEx)) {
-		
+	if(RegisterClassEx(&m_windowClassEx)) {	
 		return true;	
 	}
-
-	
-	
 
 	// debuginfo here
 	// omitting return value from GetLastError() for now
@@ -50,16 +39,15 @@ bool Window::initWindowClass(UINT style, LPCWSTR className) {
 	return false;
 }
 
-bool Window::createWindow(LPCWSTR title, int x, int y, int width, int height) {
+bool Window::createWindowInitDirectX(LPCWSTR title, int x, int y, int width, int height) {
+	
 	// passing in this pointer as optional param (lpParam) for using it later to access internal method in static message callback function
 	m_hWindow = CreateWindowEx(NULL, m_className, title, WS_OVERLAPPEDWINDOW, x, y, width, height, NULL, NULL, m_hInstance, this);
 	
 	if(m_hWindow) {
-		
 		ShowWindow(m_hWindow, m_nCmdShow);
-		m_renderDevice->init(m_hWindow);
+		m_renderDevice->createDevice(m_hWindow);
 		return true;
-		
 	}
 
 	// debuginfo here
@@ -73,11 +61,14 @@ int Window::run() {
 	// this struct holds Windows event messages
     MSG msg;
 
+	// the render device (DirectX9* m_renderDevice) should be set at this time
 	if(m_renderDevice) {
+		// as the running app ..
 		if(m_runningApp) {
-			m_renderDevice->setApp(m_runningApp);
-
-			m_renderDevice->afterInit();
+			// sets the app for DirectX9* m_renderDevice
+			m_renderDevice->attachApp(m_runningApp);
+			// custom initalize function
+			m_renderDevice->onCreateDevice();
 		}
 	}
 
@@ -107,7 +98,7 @@ int Window::run() {
 	return msg.wParam;
 }
 
-void Window::setApp(App* currentApp) {
+void Window::attachApp(App* currentApp) {
 	if(currentApp) 
 		m_runningApp = currentApp;
 }

@@ -12,11 +12,11 @@ DirectX9::~DirectX9() {
 	release();
 }
 
-void DirectX9::setApp(App* currentApp) {
+void DirectX9::attachApp(App* currentApp) {
 	m_runningApp = currentApp;
 }
 
-void DirectX9::init(HWND window) {
+void DirectX9::createDevice(HWND window) {
 	m_pD3D = Direct3DCreate9(D3D_SDK_VERSION);
 
 	// struct that holds informations provided to the video card
@@ -54,7 +54,7 @@ void DirectX9::init(HWND window) {
 
 }
 
-void DirectX9::afterInit() {
+void DirectX9::onCreateDevice() {
 	if(m_runningApp)
 		m_runningApp->onCreateDevice();
 }
@@ -186,5 +186,23 @@ void DirectX9::renderVertexbuffer(T_PRIMITIVE type, std::string tag) {
 		if(FAILED(m_pDevice->DrawPrimitive(type,0,primitiveCount))) {
 			return;
 		}
+	}
+}
+
+void* DirectX9::getRawVideoMemoryPtr(std::string tag) {
+	VertexbufferInfo* vb = m_vertexBuffers[tag];
+	int vertexStructSize = calcCustomStructSize(vb->FVF);
+
+	if(vb) {
+		void* vram;
+		vb->buffer->Lock(0,vb->vertexCount*vertexStructSize,&vram,0);
+		return vram;
+	}
+}
+
+void DirectX9::unlockRawVideoMemoryPtr(std::string tag) {
+	VertexbufferInfo* vb = m_vertexBuffers[tag];
+	if(vb) {
+		vb->buffer->Unlock();
 	}
 }

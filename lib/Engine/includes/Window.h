@@ -15,16 +15,17 @@ public:
 	~Window();
 
 	bool initWindowClass(UINT style, LPCWSTR className);
-	bool createWindow(LPCWSTR title, int x, int y, int width, int height);
+	bool createWindowInitDirectX(LPCWSTR title, int x, int y, int width, int height);
 	
 	int run();
 
-	inline HWND handle();
-	//static inline int isInitialized();
+
 	static LRESULT __stdcall messageCallback(HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam);
-
-	void setApp(App* currentApp);
-
+	
+	
+	void attachApp(App* currentApp);
+	
+	
 	DirectX9* getRenderDevice();
 	
 
@@ -49,7 +50,7 @@ private:
 	App* m_runningApp;
 	// used to communicate to DirectX9
 	DirectX9* m_renderDevice;
-	// static int bInitialized;
+
 };
 
 #endif
