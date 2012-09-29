@@ -12,6 +12,10 @@ DirectX9::~DirectX9() {
 	release();
 }
 
+void DirectX9::setApp(App* currentApp) {
+	m_runningApp = currentApp;
+}
+
 void DirectX9::init(HWND window) {
 	m_pD3D = Direct3DCreate9(D3D_SDK_VERSION);
 
@@ -48,8 +52,9 @@ void DirectX9::init(HWND window) {
 							   &dev_info,
 							   &m_pDevice);
 
-	
+}
 
+void DirectX9::afterInit() {
 	if(m_runningApp)
 		m_runningApp->onCreateDevice();
 }
@@ -157,5 +162,13 @@ VertexbufferInfo* DirectX9::createVertexBuffer(const DWORD numberOfVertices, con
 	return info;
 }
 
+void DirectX9::setVertexBufferData(std::string tag, void* customVertices) {
+	
+	VertexbufferInfo* vb = m_vertexBuffers[tag];
+	int vertexStructSize = calcCustomStructSize(vb->FVF);
 
-
+	void *vram;
+	vb->buffer->Lock(0, vb->vertexCount*vertexStructSize, &vram, 0);
+	memcpy(vram,customVertices,vb->vertexCount*vertexStructSize);
+	vb->buffer->Unlock();
+}

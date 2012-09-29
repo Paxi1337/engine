@@ -23,6 +23,9 @@ public:
 	//static inline int isInitialized();
 	static LRESULT __stdcall messageCallback(HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam);
 
+	void setApp(App* currentApp);
+
+	DirectX9* getRenderDevice();
 	
 
 private:

@@ -73,6 +73,14 @@ int Window::run() {
 	// this struct holds Windows event messages
     MSG msg;
 
+	if(m_renderDevice) {
+		if(m_runningApp) {
+			m_renderDevice->setApp(m_runningApp);
+
+			m_renderDevice->afterInit();
+		}
+	}
+
     // start message loop
     while(1)
     {
@@ -97,6 +105,15 @@ int Window::run() {
     }
 
 	return msg.wParam;
+}
+
+void Window::setApp(App* currentApp) {
+	if(currentApp) 
+		m_runningApp = currentApp;
+}
+
+DirectX9* Window::getRenderDevice() {
+	return m_renderDevice;
 }
 
 LRESULT Window::messageCallback(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {

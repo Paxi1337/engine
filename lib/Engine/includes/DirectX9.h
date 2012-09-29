@@ -70,6 +70,8 @@ public:
 	// initialized DirectX
 	// TODO options for window
 	void init(HWND hWindow);
+	void afterInit();
+	void setApp(App* runningApp);
 
 	// TODO toggleFullscreen();
 	
