@@ -14,7 +14,6 @@ typedef struct VertexbufferInfo {
 
 } *PVertexbufferInfo; 
 
-
 //typedef enum D3DPRIMITIVETYPE { 
 //	D3DPT_POINTLIST       = 1,
 //	D3DPT_LINELIST        = 2,

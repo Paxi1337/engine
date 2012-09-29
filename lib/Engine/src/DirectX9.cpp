@@ -131,22 +131,6 @@ void DirectX9::renderFrame() {
 
 }
 
-//// vertex buffer functions
-//VertexbufferInfo* createVertexBuffer(const DWORD numberOfVertices, const DWORD FVF, std::string tag);
-//// the customVertex FVF has to be exactly as defined in the associated buffer 
-//void setVertexBufferData(std::string tag, void* customVertices);
-//
-//// this function returns the raw video memory pointer given by
-//// buffer->Lock(0, 0, (void**)&pVoid, 0); return pVoid;
-//// u must not forget to call unlockRawVideoMemoryPtr to tell DirectX9 the memory region locked can be unlocked again
-//void* getRawVideoMemoryPtr(std::string vertexBuffer);
-//void unlockRawVideoMemoryPtr(std::string vertexBuffer);
-//
-//// render given vertex buffer 
-//// important: it is assumed that you provide the correct information about the size of the customVertexStruct and their amount
-//void renderVertexbuffer(T_PRIMITIVE type, std::string tag);
-//void renderAllVertexbuffers();
-
 VertexbufferInfo* DirectX9::createVertexBuffer(const DWORD numberOfVertices, const DWORD FVF, const std::string tag) {
 
 	if(FVF != CUSTOMVERTEX3COLORFORMAT && FVF != CUSTOMVERTEX3COLORUVFORMAT && FVF != CUSTOMVERTEXTRANSFORMEDCOLORFORMAT)
@@ -183,6 +167,7 @@ void DirectX9::setVertexBufferData(std::string tag, void* customVertices) {
 	memcpy(vram,customVertices,vb->vertexCount*vertexStructSize);
 	vb->buffer->Unlock();
 }
+
 
 void DirectX9::renderVertexbuffer(T_PRIMITIVE type, std::string tag) {
 	VertexbufferInfo* vb = m_vertexBuffers[tag];
