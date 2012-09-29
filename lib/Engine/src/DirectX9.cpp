@@ -198,6 +198,8 @@ void* DirectX9::getRawVideoMemoryPtr(std::string tag) {
 		vb->buffer->Lock(0,vb->vertexCount*vertexStructSize,&vram,0);
 		return vram;
 	}
+
+	return NULL;
 }
 
 void DirectX9::unlockRawVideoMemoryPtr(std::string tag) {
