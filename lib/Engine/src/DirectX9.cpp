@@ -1,14 +1,5 @@
 #include "../includes/DirectX9.h"
-#include "../includes/Camera.h"
 #include "../includes/Timer.h"
-
-D3DXVECTOR3 controlPoints[] = { D3DXVECTOR3(-0.009000, 0.081000, -54.699749),
-	D3DXVECTOR3(-0.032000, 0.128000, -53.927998),
-	D3DXVECTOR3(-0.063000, 0.147000, -52.803253),
-	D3DXVECTOR3(-0.096000, 0.144000, -51.444000),
-	D3DXVECTOR3(-0.125000, 0.125000, -49.968750),
-	D3DXVECTOR3(-0.144000, 0.096000, -48.496002),
-	D3DXVECTOR3(-0.147000, 0.063000, -47.144249)};
 
 DirectX9::DirectX9() : m_pDevice(NULL), m_pD3D(NULL), m_runningApp(NULL), m_timeSinceElapsedTimeReset(0) {
 	
@@ -112,6 +103,8 @@ int DirectX9::calcPrimitiveCount(T_PRIMITIVE primitiveType, const DWORD numberOf
 
 int DirectX9::calcCustomStructSize(DWORD FVF) {
 	switch(FVF) {
+		case CUSTOMVERTEX3NORMAL:
+			return sizeof(CustomVertex3Normal);
 		case CUSTOMVERTEX3COLORUVFORMAT:
 			return sizeof(CustomVertex3ColorUV);
 		case CUSTOMVERTEX3COLORFORMAT:
@@ -152,15 +145,12 @@ void DirectX9::renderFrame() {
 
 VertexbufferInfo* DirectX9::createVertexBuffer(const DWORD numberOfVertices, const DWORD FVF, const std::string tag) {
 
-	if(FVF != CUSTOMVERTEX3COLORFORMAT && FVF != CUSTOMVERTEX3COLORUVFORMAT && FVF != CUSTOMVERTEXTRANSFORMEDCOLORFORMAT)
-		return NULL;
-
-	VertexbufferInfo* info = new VertexbufferInfo;
-
 	int vertexStructSize = calcCustomStructSize(FVF);
 
 	if(vertexStructSize == -1) 
 		return NULL;
+
+	VertexbufferInfo* info = new VertexbufferInfo;
 
 	// create the vertex buffer before otherwise the call to CreateVertexBuffer will zero out the next DWORD in the VertexBufferInfo struct
 	m_pDevice->CreateVertexBuffer(numberOfVertices*vertexStructSize, 0, FVF, D3DPOOL_MANAGED, &info->buffer, NULL);
@@ -189,6 +179,7 @@ void DirectX9::setVertexBufferData(std::string tag, void* customVertices) {
 void DirectX9::renderVertexbuffer(T_PRIMITIVE type, std::string tag, D3DXMATRIX worldTransform) {
 	VertexbufferInfo* vb = m_vertexBuffers[tag];
 	if(vb) {
+		
 		setTransform(D3DTS_WORLD, &worldTransform);
 
 		int vertexStructSize = calcCustomStructSize(vb->FVF);
