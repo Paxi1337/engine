@@ -4,6 +4,7 @@
 #include "App.h"
 #include <d3d9.h>
 #include <d3dx9.h>
+
 #include <string>
 #include <map>
 
@@ -56,8 +57,11 @@ struct CustomVertex3ColorUV {
 #define CUSTOMVERTEX3COLORUVFORMAT (D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1)
 
 struct CustomVertex3Color {
-	D3DXVECTOR3 xyz;
-	DWORD color;
+	/*CustomVertex3Color() {};
+	CustomVertex3Color(D3DXVECTOR3 vec, DWORD color) : mVec(vec), mColor(color){};
+*/
+	D3DXVECTOR3 mVec;
+	DWORD mColor;
 };
 #define CUSTOMVERTEX3COLORFORMAT (D3DFVF_XYZ | D3DFVF_DIFFUSE)
 
@@ -105,14 +109,19 @@ public:
 
 	// render given vertex buffer 
 	// important: it is assumed that you provide the correct information about the size of the customVertexStruct and their amount
-	void renderVertexbuffer(T_PRIMITIVE type, std::string tag);
+	void renderVertexbuffer(T_PRIMITIVE type, std::string tag, D3DXMATRIX mWorldTransform);
 	void renderAllVertexbuffers();
 
+	// dispatch input device data
+	void dispatchKeyMessage(WPARAM keyCode);
+	void dispatchRawMouseInput(RAWINPUT const& rawMouseInput);
 	
-
 	// http://www.mvps.org/directx/articles/d3dxmesh.htm
 	// TODO LPD3DXMESH createMesh();
-	
+
+	void enableLighting() const { if(m_pDevice) m_pDevice->SetRenderState(D3DRS_LIGHTING, TRUE); };
+	void disableLighting() const { if(m_pDevice) m_pDevice->SetRenderState(D3DRS_LIGHTING, FALSE); };
+
 private:
 
 	// calculates the amount of primitives that have to be drawn within render method
@@ -130,6 +139,11 @@ private:
 	std::map<std::string,VertexbufferInfo*> m_vertexBuffers;
 	
 	App* m_runningApp;
+	//Camera* m_camera;
+	
+	int m_windowWidth;
+	int m_windowHeight;
+	double m_timeSinceElapsedTimeReset;
 };
 
 #endif

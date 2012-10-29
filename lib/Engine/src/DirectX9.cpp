@@ -1,6 +1,16 @@
 #include "../includes/DirectX9.h"
+#include "../includes/Camera.h"
+#include "../includes/Timer.h"
 
-DirectX9::DirectX9() : m_pDevice(NULL), m_pD3D(NULL), m_runningApp(NULL) {
+D3DXVECTOR3 controlPoints[] = { D3DXVECTOR3(-0.009000, 0.081000, -54.699749),
+	D3DXVECTOR3(-0.032000, 0.128000, -53.927998),
+	D3DXVECTOR3(-0.063000, 0.147000, -52.803253),
+	D3DXVECTOR3(-0.096000, 0.144000, -51.444000),
+	D3DXVECTOR3(-0.125000, 0.125000, -49.968750),
+	D3DXVECTOR3(-0.144000, 0.096000, -48.496002),
+	D3DXVECTOR3(-0.147000, 0.063000, -47.144249)};
+
+DirectX9::DirectX9() : m_pDevice(NULL), m_pD3D(NULL), m_runningApp(NULL), m_timeSinceElapsedTimeReset(0) {
 	
 }
 
@@ -32,7 +42,7 @@ void DirectX9::createDevice(HWND window) {
 	dev_info.Flags = 0;
 	dev_info.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
 	dev_info.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
-	//dev_info.EnableAutoDepthStencil = true; // z-buffer
+	dev_info.EnableAutoDepthStencil = true; // z-buffer
 	dev_info.AutoDepthStencilFormat = D3DFMT_D16;
 	dev_info.BackBufferFormat = D3DFMT_X8R8G8B8;
 #ifndef FULLSCREEN
@@ -51,6 +61,11 @@ void DirectX9::createDevice(HWND window) {
 							   D3DCREATE_SOFTWARE_VERTEXPROCESSING,
 							   &dev_info,
 							   &m_pDevice);
+
+	setRenderState(D3DRS_LIGHTING, FALSE);
+	
+	setRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+	
 
 }
 
@@ -89,6 +104,8 @@ int DirectX9::calcPrimitiveCount(T_PRIMITIVE primitiveType, const DWORD numberOf
 			return ceil((double)numberOfVertices/2.0);
 		case D3DPT_TRIANGLELIST:
 			return ceil((double)numberOfVertices/3.0);
+		case D3DPT_LINESTRIP:
+			return numberOfVertices-1;
 		default: return -1;
 	}
 }
@@ -117,6 +134,7 @@ void DirectX9::setTransform(T_TRANSFORM transformState, const D3DMATRIX* pMatrix
 void DirectX9::renderFrame() {
 
 	m_pDevice->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
+	m_pDevice->Clear(0, NULL, D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
 
 	m_pDevice->BeginScene();
 	
@@ -129,6 +147,7 @@ void DirectX9::renderFrame() {
 	
 	m_pDevice->Present(NULL,NULL,NULL,NULL);
 
+
 }
 
 VertexbufferInfo* DirectX9::createVertexBuffer(const DWORD numberOfVertices, const DWORD FVF, const std::string tag) {
@@ -140,16 +159,14 @@ VertexbufferInfo* DirectX9::createVertexBuffer(const DWORD numberOfVertices, con
 
 	int vertexStructSize = calcCustomStructSize(FVF);
 
+	if(vertexStructSize == -1) 
+		return NULL;
+
 	// create the vertex buffer before otherwise the call to CreateVertexBuffer will zero out the next DWORD in the VertexBufferInfo struct
-	info->FVF = m_pDevice->CreateVertexBuffer(numberOfVertices*vertexStructSize, 0, FVF, D3DPOOL_MANAGED, &info->buffer, NULL);
+	m_pDevice->CreateVertexBuffer(numberOfVertices*vertexStructSize, 0, FVF, D3DPOOL_MANAGED, &info->buffer, NULL);
 
 	info->FVF = FVF;
 	info->vertexCount = numberOfVertices;
-
-	
-
-	
-
 	m_vertexBuffers[tag] = info;
 	return info;
 }
@@ -169,9 +186,11 @@ void DirectX9::setVertexBufferData(std::string tag, void* customVertices) {
 }
 
 
-void DirectX9::renderVertexbuffer(T_PRIMITIVE type, std::string tag) {
+void DirectX9::renderVertexbuffer(T_PRIMITIVE type, std::string tag, D3DXMATRIX worldTransform) {
 	VertexbufferInfo* vb = m_vertexBuffers[tag];
 	if(vb) {
+		setTransform(D3DTS_WORLD, &worldTransform);
+
 		int vertexStructSize = calcCustomStructSize(vb->FVF);
 		int primitiveCount = calcPrimitiveCount(type, vb->vertexCount);
 
@@ -206,5 +225,17 @@ void DirectX9::unlockRawVideoMemoryPtr(std::string tag) {
 	VertexbufferInfo* vb = m_vertexBuffers[tag];
 	if(vb) {
 		vb->buffer->Unlock();
+	}
+}
+
+void DirectX9::dispatchKeyMessage(WPARAM keyCode) {
+	if(m_runningApp) {
+		m_runningApp->onKeyPressed(keyCode);
+	}
+}
+
+void DirectX9::dispatchRawMouseInput(RAWINPUT const& rawMouseInput) {
+	if(m_runningApp) {
+		m_runningApp->onRawMouseInputReceived(rawMouseInput);
 	}
 }
