@@ -2,6 +2,7 @@
 #define __TESTAPP_H
 
 #include "Window.h"
+#include "FPCamera.h"
 
 class TestApp : public App {
 public:
@@ -15,13 +16,20 @@ public:
 	void onUpdate();
 	void onRender();
 	void onLostDevice();
-
+	void onKeyPressed(WPARAM keyCode);
+	void onRawMouseInputReceived(RAWINPUT const& rawMouseInput);
 	void setWindow(Window* window);
-
+	
 private:
 	Window* m_window;
-
 	VertexbufferInfo* m_buffer;
+	VertexbufferInfo* m_buffer2;
+	VertexbufferInfo* m_buffer3;
+	VertexbufferInfo* m_buffer4;
+	VertexbufferInfo* m_buffer5;
+
+	double m_timeSinceElapsedTimeReset;
+	CFPCamera* mNewCamera;
 };
 
 #endif
