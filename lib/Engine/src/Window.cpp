@@ -7,8 +7,15 @@ Window::Window(const HINSTANCE hInstance, int nCmdShow) : m_hInstance(hInstance)
 														  m_windowCallBackFunction(messageCallback),		
 														  m_nCmdShow(nCmdShow),
 														  m_runningApp(NULL),
-														  m_renderDevice(new DirectX9()) {
+														  m_vsLogger(new VSLogger),
+														  m_renderDevice(new DirectX9) {
 	memset(&m_windowClassEx, '\0', sizeof(WNDCLASSEX));
+
+	m_vsLogger->verbosity(debuglib::logger::DEBUG);
+	m_vsLogger->outputter(new VSOutputter);
+
+	//delete m_vsLogger;
+
 }
 
 Window::~Window() {
@@ -28,7 +35,10 @@ bool Window::initWindowClass(UINT style, LPCWSTR className) {
 	m_windowClassEx.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW);
 	m_windowClassEx.lpszClassName = m_className;
 
-	if(RegisterClassEx(&m_windowClassEx)) {	
+	if(RegisterClassEx(&m_windowClassEx)) {
+		#ifdef USE_DEBUGLIB
+			m_vsLogger->log("Window was succesfully initialized", debuglib::logger::DEBUG);
+		#endif
 		return true;	
 	}
 
@@ -39,6 +49,18 @@ bool Window::initWindowClass(UINT style, LPCWSTR className) {
 	return false;
 }
 
+bool Window::initMouse() {
+	RAWINPUTDEVICE mouse;
+	mouse.usUsage = 0x02;    // register mouse
+	mouse.usUsagePage = 0x01;    // top-level mouse
+	mouse.dwFlags = NULL;    // flags
+	mouse.hwndTarget = m_hWindow;    // handle to a window
+
+	RegisterRawInputDevices(&mouse, 1, sizeof(RAWINPUTDEVICE));    // register the device
+	
+	return true;
+}
+
 bool Window::createWindowInitDirectX(LPCWSTR title, int x, int y, int width, int height) {
 	
 	// passing in this pointer as optional param (lpParam) for using it later to access internal method in static message callback function
@@ -47,6 +69,7 @@ bool Window::createWindowInitDirectX(LPCWSTR title, int x, int y, int width, int
 	if(m_hWindow) {
 		ShowWindow(m_hWindow, m_nCmdShow);
 		m_renderDevice->createDevice(m_hWindow);
+		
 		return true;
 	}
 
@@ -124,17 +147,33 @@ LRESULT Window::messageCallback(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 }
 
 LRESULT Window::messageCallbackInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+	RAWINPUT inputData;
+
+	UINT dataSize = sizeof(RAWINPUT);
+
     // handle the given message
     switch(message)
     {
         // case WM_DESTROY when window gets closed
         case WM_DESTROY:
             {
-                // closes the application entirely
                 PostQuitMessage(0);
                 return 0;
             }
+		case WM_KEYDOWN:
+			m_renderDevice->dispatchKeyMessage(wParam);
+			break;
+		case WM_INPUT:
+			{
+				GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), 
+					RID_INPUT,
+					&inputData,
+					&dataSize,
+					sizeof(RAWINPUTHEADER));
 
+				m_renderDevice->dispatchRawMouseInput(inputData);
+			}
+			break;
 		default: return DefWindowProc (hWnd, message, wParam, lParam);
     }
 }

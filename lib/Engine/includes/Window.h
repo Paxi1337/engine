@@ -3,8 +3,17 @@
 
 #include <cstdio>
 #include <Windows.h>
+
 #include "App.h"
 #include "DirectX9.h"
+
+#define USE_DEBUGLIB
+
+#ifdef USE_DEBUGLIB
+	// TODO fix absolute path, relative not working ..
+	#include "E:\Dev\repos\Engine\lib\debuglib\includes\DebugLib.h"
+	#include "E:\Dev\repos\Engine\lib\debuglib\includes\VsLogger.h"
+#endif
 
 typedef LRESULT (__stdcall *MSGCALLBACK) (HWND, UINT, WPARAM, LPARAM);
 
@@ -17,14 +26,14 @@ public:
 	bool initWindowClass(UINT style, LPCWSTR className);
 	bool createWindowInitDirectX(LPCWSTR title, int x, int y, int width, int height);
 	
-	int run();
+	bool initMouse();
 
+	int run();
 
 	static LRESULT __stdcall messageCallback(HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam);
 	
 	
 	void attachApp(App* currentApp);
-	
 	
 	DirectX9* getRenderDevice();
 	
@@ -50,7 +59,10 @@ private:
 	App* m_runningApp;
 	// used to communicate to DirectX9
 	DirectX9* m_renderDevice;
-
+	
+	#ifdef USE_DEBUGLIB
+		VSLogger* m_vsLogger;
+	#endif
 };
 
 #endif

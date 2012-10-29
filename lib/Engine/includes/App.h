@@ -1,6 +1,8 @@
 #ifndef __APP_H
 #define __APP_H
 
+#include <Windows.h>
+
 class App {
 	
 public :
@@ -11,6 +13,8 @@ public :
 	virtual void onUpdate() = 0;
 	virtual void onRender() = 0;
 	virtual void onLostDevice() = 0;
+	virtual void onKeyPressed(WPARAM keyCode) = 0;
+	virtual void onRawMouseInputReceived(RAWINPUT const& rawMouseInput) = 0;
 };
 
 #endif
