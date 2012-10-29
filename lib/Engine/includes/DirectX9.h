@@ -47,7 +47,7 @@ struct CustomVertex3Normal {
 	FLOAT x,y,z;
 	D3DXVECTOR3 normal;
 };
-#define CUSTOMVERTEX3NORMAL (D3DFVF_XYZRHW | D3DFVF_NORMAL)
+#define CUSTOMVERTEX3NORMAL (D3DFVF_XYZ | D3DFVF_NORMAL)
 
 struct CustomVertexTransformedColor {
 	FLOAT x,y,z,rhw;
