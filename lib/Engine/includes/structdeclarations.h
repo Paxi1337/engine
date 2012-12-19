@@ -32,15 +32,13 @@ typedef struct DirectionalLight {
 	D3DXCOLOR ambient;
 	D3DXCOLOR diffuse;
 	D3DXCOLOR spec;
-	
-	
 } *PDirectionalLight;
 
 typedef struct PointLight {
+	D3DXVECTOR3 posW;
 	D3DXCOLOR ambient;
 	D3DXCOLOR diffuse;
 	D3DXCOLOR spec;
-	D3DXVECTOR3 posW;
 } *PPointLight;
 
 typedef struct Material {

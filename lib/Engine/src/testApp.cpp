@@ -6,67 +6,120 @@
 #include <algorithm>
 #include <cmath>
 
+#define D3DDEVICE mWindow->getRenderDevice()->getD3D9Device()
 
-int count = 1;
+// REMAINDER: may use constant shader table
+
 Timer t;
 
 const float kCameraMovementSpeed=0.4f;
 const float kCameraRotationSpeed=0.01f;
+const float lightRotationSpeed=0.1f;
 
+LPD3DXMESH gTeapot;
 
-TestApp::TestApp() : m_window(NULL), m_buffer(NULL), m_timeSinceElapsedTimeReset(0.0f), mNewCamera(new FreeCamera(D3DXVECTOR3(0.0f,0.0f,-10.0f))) {
+// vertex declarations
+IDirect3DVertexDeclaration9* vertexDeclPos3Normal3Tex2Tangent4 = 0;
 
-}
-
-TestApp::TestApp(Window* window) : m_window(window), m_buffer(NULL), m_timeSinceElapsedTimeReset(0.0f), mNewCamera(new FreeCamera(D3DXVECTOR3(0.0f,0.0f,-10.0f))) {
-
+TestApp::TestApp(Window* window) : mWindow(window), 
+													 mBuffer(NULL),
+													 mTimeSinceElapsedTimeReset(0.0f), 
+													 mSceneCamera(new FreeCamera(D3DXVECTOR3(0.0f,0.0f,-10.0f))),
+													 mWireframeMode(false)
+{
 }
 
 TestApp::~TestApp() {
 
 }
 
+void TestApp::initVertexDeclaration() {
+	D3DVERTEXELEMENT9 vertexElementPos3Normal3Tex2Tangent4[] = {
+            {0, 0,  D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0},
+            {0, 12, D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_NORMAL, 0},
+            {0, 24, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0},
+			{0, 32, D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TANGENT, 0}, 
+            D3DDECL_END()
+    };   
+	HR(mWindow->getRenderDevice()->getD3D9Device()->CreateVertexDeclaration(vertexElementPos3Normal3Tex2Tangent4, &vertexDeclPos3Normal3Tex2Tangent4));
+}
+
+CustomVertex3NormalUV verticesCube[] = {
+	// -Z face
+	{ D3DXVECTOR3(-1.0f,  1.0f, -1.0f),       D3DXVECTOR3(0.0f, 0.0f, -1.0f), 0.0f, 0.0f },
+	{ D3DXVECTOR3(1.0f,  1.0f, -1.0f),       D3DXVECTOR3(0.0f, 0.0f, -1.0f), 1.0f, 0.0f },
+	{ D3DXVECTOR3(1.0f, -1.0f, -1.0f),       D3DXVECTOR3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f },
+	{ D3DXVECTOR3(1.0f, -1.0f, -1.0f),      D3DXVECTOR3(0.0f, 0.0f, -1.0f),  1.0f, 1.0f },
+	{ D3DXVECTOR3(-1.0f, -1.0f, -1.0f),       D3DXVECTOR3(0.0f, 0.0f, -1.0f), 0.0f, 1.0f },
+	{ D3DXVECTOR3(-1.0f,  1.0f, -1.0f),       D3DXVECTOR3(0.0f, 0.0f, -1.0f), 0.0f, 0.0f },
+
+	// +Z face
+	{ D3DXVECTOR3(1.0f,  1.0f,  1.0f),     D3DXVECTOR3(0.0f, 0.0f, 1.0f),  0.0f, 0.0f },
+	{ D3DXVECTOR3(-1.0f,  1.0f,  1.0f),     D3DXVECTOR3(0.0f, 0.0f, 1.0f), 1.0f, 0.0f },
+	{ D3DXVECTOR3(-1.0f, -1.0f,  1.0f),     D3DXVECTOR3(0.0f, 0.0f, 1.0f),  1.0f, 1.0f },
+	{ D3DXVECTOR3(-1.0f, -1.0f,  1.0f),      D3DXVECTOR3(0.0f, 0.0f, 1.0f), 1.0f, 1.0f },
+	{ D3DXVECTOR3(1.0f, -1.0f,  1.0f),     D3DXVECTOR3(0.0f, 0.0f, 1.0f), 0.0f, 1.0f },
+	{ D3DXVECTOR3(1.0f,  1.0f,  1.0f),    D3DXVECTOR3(0.0f, 0.0f, 1.0f),  0.0f, 0.0f },
+
+	// -Y face
+	{ D3DXVECTOR3(-1.0f, -1.0f, -1.0f),     D3DXVECTOR3(0.0f, -1.0f, 0.0f), 0.0f, 0.0f },
+	{ D3DXVECTOR3(1.0f, -1.0f, -1.0f),    D3DXVECTOR3(0.0f, -1.0f, 0.0f),  1.0f, 0.0f },
+	{ D3DXVECTOR3(1.0f, -1.0f,  1.0f),      D3DXVECTOR3(0.0f, -1.0f, 0.0f), 1.0f, 1.0f },
+	{ D3DXVECTOR3(1.0f, -1.0f,  1.0f),    D3DXVECTOR3(0.0f, -1.0f, 0.0f),  1.0f, 1.0f },
+	{ D3DXVECTOR3(-1.0f, -1.0f,  1.0f),     D3DXVECTOR3(0.0f, -1.0f, 0.0f), 0.0f, 1.0f },
+	{ D3DXVECTOR3(-1.0f, -1.0f, -1.0f),    D3DXVECTOR3(0.0f, -1.0f, 0.0f),  0.0f, 0.0f },
+
+	// +Y face
+	{ D3DXVECTOR3(-1.0f,  1.0f,  1.0f),      D3DXVECTOR3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f },
+	{ D3DXVECTOR3(1.0f,  1.0f,  1.0f),     D3DXVECTOR3(0.0f, 1.0f, 0.0f), 1.0f, 0.0f },
+	{ D3DXVECTOR3(1.0f,  1.0f, -1.0f),      D3DXVECTOR3(0.0f, 1.0f, 0.0f), 1.0f, 1.0f },
+	{ D3DXVECTOR3(1.0f,  1.0f, -1.0f),      D3DXVECTOR3(0.0f, 1.0f, 0.0f), 1.0f, 1.0f },
+	{ D3DXVECTOR3(-1.0f,  1.0f, -1.0f),     D3DXVECTOR3(0.0f, 1.0f, 0.0f), 0.0f, 1.0f },
+	{ D3DXVECTOR3(-1.0f,  1.0f,  1.0f),      D3DXVECTOR3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f },
+
+	// -X face
+	{ D3DXVECTOR3(-1.0f,  1.0f,  1.0f),      D3DXVECTOR3(-1.0f, 0.0f, 0.0f), 0.0f, 0.0f },
+	{ D3DXVECTOR3(-1.0f,  1.0f, -1.0f),      D3DXVECTOR3(-1.0f, 0.0f, 0.0f), 1.0f, 0.0f },
+	{ D3DXVECTOR3(-1.0f, -1.0f, -1.0f),      D3DXVECTOR3(-1.0f, 0.0f, 0.0f), 1.0f, 1.0f },
+	{ D3DXVECTOR3(-1.0f, -1.0f, -1.0f),      D3DXVECTOR3(-1.0f, 0.0f, 0.0f), 1.0f, 1.0f },
+	{ D3DXVECTOR3(-1.0f, -1.0f,  1.0f),     D3DXVECTOR3(-1.0f, 0.0f, 0.0f),  0.0f, 1.0f },
+	{ D3DXVECTOR3(-1.0f,  1.0f,  1.0f),      D3DXVECTOR3(-1.0f, 0.0f, 0.0f), 0.0f, 0.0f },
+
+	// +X face
+	{ D3DXVECTOR3(1.0f,  1.0f, -1.0f),      D3DXVECTOR3(1.0f, 0.0f, 0.0f), 0.0f, 0.0f },
+	{ D3DXVECTOR3(1.0f,  1.0f,  1.0f),      D3DXVECTOR3(1.0f, 0.0f, 0.0f), 1.0f, 0.0f },
+	{ D3DXVECTOR3(1.0f, -1.0f,  1.0f),      D3DXVECTOR3(1.0f, 0.0f, 0.0f), 1.0f, 1.0f },
+	{ D3DXVECTOR3(1.0f, -1.0f,  1.0f),      D3DXVECTOR3(1.0f, 0.0f, 0.0f), 1.0f, 1.0f },
+	{ D3DXVECTOR3(1.0f, -1.0f, -1.0f),     D3DXVECTOR3(1.0f, 0.0f, 0.0f),  0.0f, 1.0f },
+	{ D3DXVECTOR3(1.0f,  1.0f, -1.0f),      D3DXVECTOR3(1.0f, 0.0f, 0.0f), 0.0f, 0.0f }
+};
+
 void TestApp::onCreateDevice() {
+
+	// init and set vertex declaration
+	//initVertexDeclaration();
+	//HR(D3DDEVICE->SetVertexDeclaration(vertexDeclPos3Normal3Tex2Tangent4));
 	
+	HR(D3DXCreateTeapot(D3DDEVICE, &gTeapot, NULL));
+
+	// load shader
+	mWindow->getRenderDevice()->loadEffectFromFile("./shader/basic.fx");
+
+	// load textures
+	HR(D3DXCreateTextureFromFileA(D3DDEVICE, "./texture/white.jpg", &mWhiteTexture));
+
+	// init light
+	initLight();
+
+	// create and init cube
+	mBuffer = mWindow->getRenderDevice()->createVertexBuffer(36, CUSTOMVERTEX3NORMALUVFORMAT, std::string("cube"));
+	mWindow->getRenderDevice()->setVertexBufferData(std::string("cube"), verticesCube); 
+
+	// init shader handles
+	initShaderHandles();
 	
-
-	mNewCamera->setPosition(D3DXVECTOR3(0.0f,0.0f,-25.0f));
-	//m_camera->setLookAt(D3DXVECTOR3(0.0f,0.0f,-15.0f));
-	//m_camera->updateCamera();
-
-	CustomVertex3Color vertices[] =
-	{
-		{ D3DXVECTOR3(-3.0f, 0.0f, 0.0f), D3DCOLOR_XRGB(0, 0, 255) },
-		{ D3DXVECTOR3(0.0f, 5.0f, 0.0f), D3DCOLOR_XRGB(0, 255, 0) },
-		{ D3DXVECTOR3(3.0f, 0.0f, 0.0f), D3DCOLOR_XRGB(255, 0, 0) }
-	};
-
-	CustomVertex3Normal verticesGround[] = 
-	{
-		{ D3DXVECTOR3(-10.0f, 0.0f, 10.0f), D3DXVECTOR3(0.0f, 1.0f, 0.0f)},
-		{ D3DXVECTOR3(10.0f, 0.0f, 10.0f), D3DXVECTOR3(0.0f, 1.0f, 0.0f)},
-		{ D3DXVECTOR3(-10.0f, 0.0f, -10.0f), D3DXVECTOR3(0.0f, 1.0f, 0.0f)},
-		{ D3DXVECTOR3(10.0f, 0.0f, -10.0f), D3DXVECTOR3(0.0f, 1.0f, 0.0f)}
-	};
-
-	m_buffer = m_window->getRenderDevice()->createVertexBuffer(4, CUSTOMVERTEX3NORMALFORMAT, std::string("test"));
-	m_window->getRenderDevice()->setVertexBufferData(std::string("test"), verticesGround);
-
-
-	
-
-	if(m_window) {
-		//m_buffer = m_window->getRenderDevice()->createVertexBuffer(3, CUSTOMVERTEX3COLORFORMAT, std::string("test"));
-		
-		m_buffer3 = m_window->getRenderDevice()->createVertexBuffer(3, CUSTOMVERTEX3COLORFORMAT, std::string("test3"));
-		m_buffer4 = m_window->getRenderDevice()->createVertexBuffer(3, CUSTOMVERTEX3COLORFORMAT, std::string("test4"));
-
-		
-		//m_window->getRenderDevice()->setVertexBufferData(std::string("test"), vertices);
-		m_window->getRenderDevice()->setVertexBufferData(std::string("test3"), vertices);
-		m_window->getRenderDevice()->setVertexBufferData(std::string("test4"), vertices);
-
-	}
+	// setup scene camera
+	mSceneCamera->setPosition(D3DXVECTOR3(0.0f,0.0f,-20.0f));
 }
 
 void TestApp::onResetDevice() {
@@ -78,53 +131,29 @@ void TestApp::onReleaseDevice() {
 }
 
 void TestApp::onUpdate() {
-
+	if(mWindow) {
+		setShaderData();
+	}
 }
 
-//float elapsedTime = 0.0f;
-
 void TestApp::onRender() {
-	t.start();
+	if(mWindow) {
+		t.start();
 
-	D3DXMATRIX worldTransform;
-	D3DXMatrixIdentity(&worldTransform);
-	
-	
-	D3DXMATRIX translatedRight, rot;
-	D3DXMatrixIdentity(&rot);
-	D3DXMatrixIdentity(&translatedRight);
-	D3DXMatrixTranslation(&translatedRight,10.0f,0.0f,0.0f);
-	D3DXMatrixRotationY(&rot,D3DXToRadian(90.0f));
-
-	D3DXMATRIX identityM;
-	D3DXMatrixIdentity(&identityM);
-
-	D3DXMATRIX translatedLeft;
-	D3DXMatrixIdentity(&translatedLeft);
-	D3DXMatrixTranslation(&translatedLeft,-25.0f,0.0f,12.0f);
-
-	if(m_window) {
-
-		D3DXMATRIX view;
-		mNewCamera->calculateViewMatrix(view);
-		m_window->getRenderDevice()->setTransform(D3DTS_VIEW, &view);
+		mWindow->getRenderDevice()->getCurrentEffect()->Begin(NULL,NULL);
+		mWindow->getRenderDevice()->getCurrentEffect()->BeginPass(0);
 		
-		D3DXMATRIX projection;
-		mNewCamera->calculateProjectionMatrix(projection);
-		m_window->getRenderDevice()->setTransform(D3DTS_PROJECTION, &projection);
+		//mWindow->getRenderDevice()->renderVertexbuffer(D3DPT_TRIANGLELIST, std::string("cube"));
 
-		m_window->getRenderDevice()->renderVertexbuffer(D3DPT_TRIANGLESTRIP, std::string("test"));
-		m_window->getRenderDevice()->renderVertexbuffer(D3DPT_LINESTRIP, std::string("test2"));
-		m_window->getRenderDevice()->renderVertexbuffer(D3DPT_TRIANGLELIST, std::string("test3"));
-		m_window->getRenderDevice()->renderVertexbuffer(D3DPT_TRIANGLELIST, std::string("test4"));
-		m_window->getRenderDevice()->renderVertexbuffer(D3DPT_LINESTRIP, std::string("test5"));
+		gTeapot->DrawSubset(0);
+
+		mWindow->getRenderDevice()->getCurrentEffect()->EndPass();
+		mWindow->getRenderDevice()->getCurrentEffect()->End();
 
 		t.stop();
 		float elapsedTime = t.getElapsedTimeInMilliSec();
-		m_timeSinceElapsedTimeReset = m_timeSinceElapsedTimeReset + elapsedTime;
+		mTimeSinceElapsedTimeReset = mTimeSinceElapsedTimeReset + elapsedTime;
 	}
-
-	
 }
 
 void TestApp::onLostDevice() {
@@ -132,40 +161,43 @@ void TestApp::onLostDevice() {
 }
 
 void TestApp::setWindow(Window* window) {
-	m_window = window;
+	mWindow = window;
 }
 
 void TestApp::onKeyPressed(WPARAM keyCode) {
-	//D3DXVECTOR3 currentPos = m_camera->getPosition();
 
 	switch(keyCode) {	
-		case 'W':
-			mNewCamera->moveForward(kCameraMovementSpeed);
-			break;
-		case 'S':
-			mNewCamera->moveForward(-kCameraMovementSpeed);
-			break;
-		case 'A':
-			mNewCamera->moveRight(-kCameraMovementSpeed);
-			break;
-		case 'D':
-			mNewCamera->moveRight(kCameraMovementSpeed);
-			break;
-		case VK_UP:
-			mNewCamera->pitch(kCameraRotationSpeed);
-			break;
-		case VK_DOWN:
-			mNewCamera->yaw(kCameraRotationSpeed);
-			break;
-		case 'O':
-			//m_camera->head(D3DXToRadian(5.0f));
-			break;
-		default: break;
+	case 'W':
+		mSceneCamera->moveForward(kCameraMovementSpeed);
+		break;
+	case 'S':
+		mSceneCamera->moveForward(-kCameraMovementSpeed);
+		break;
+	case 'A':
+		mSceneCamera->moveRight(-kCameraMovementSpeed);
+		break;
+	case 'D':
+		mSceneCamera->moveRight(kCameraMovementSpeed);
+		break;
+	case 'Q':
+		mWireframeMode ? mWireframeMode = false : mWireframeMode = true;
+		break;
+	case VK_UP:
+		
+		break;
+	case VK_DOWN:
+		
+		break;
+	case VK_LEFT:
+		
+		break;
+	case VK_RIGHT:
+		
+		break;
+
+	default: break;
 
 	}
-
-	//m_camera->updateCamera();
-	//m_camera->setPosition(currentPos);
 }
 
 void TestApp::onRawMouseInputReceived(RAWINPUT const& rawMouseInput) {
@@ -177,20 +209,122 @@ void TestApp::onRawMouseInputReceived(RAWINPUT const& rawMouseInput) {
 		mouseDown = false;
 
 	if(mouseDown) {
-		//char buffer[30];
-		//ZeroMemory(buffer,30);
-
 		float lastX = rawMouseInput.data.mouse.lLastX;
 		float lastY = rawMouseInput.data.mouse.lLastY;
-		//_snprintf(buffer,30,"%08f\n",lastX);
 
-		mNewCamera->pitch(kCameraRotationSpeed*lastY);
-		mNewCamera->yaw(kCameraRotationSpeed*lastX);
-
-		//OutputDebugStringA(buffer);
+		mSceneCamera->pitch(kCameraRotationSpeed*lastY);
+		mSceneCamera->yaw(kCameraRotationSpeed*lastX);
 	}
 }
 
-void TestApp::onCustomUserFunction() {
+void TestApp::initLight() {
+	// only do this now because no of no init list
+	//memset(&mDirLight,'\0', sizeof(DirectionalLight));
+	mDirLight.ambient = D3DXCOLOR(0.5f, 0.5f, 0.5f, 0.0f);
+	mDirLight.diffuse = D3DXCOLOR(0.5f, 0.5f, 0.5f, 0.0f);
+	mDirLight.spec = D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f);
+	mDirLight.posW = D3DXVECTOR3(2.0f, 2.0f, 2.0f); 
 
+	// only do this now because no of no init list
+	//memset(&mMaterial,'\0', sizeof(Material));
+	mMaterial.diffuse = D3DXCOLOR(0.8f, 0.8f, 0.8f, 1.0f);
+	mMaterial.ambient = D3DXCOLOR(0.8f, 0.8f, 0.8f, 1.0f);
+	mMaterial.spec = D3DXCOLOR(0.7f, 0.7f, 0.7f, 1.0f);
+	mMaterial.specPower = 150.0f;
+
+	mAmbient.r = 0.2f;
+	mAmbient.g = 0.2f;
+	mAmbient.b = 0.2f;
+	mAmbient.a = 1.0f;
+}
+
+
+void TestApp::onCustomUserFunction() {
+	
+}
+
+
+void TestApp::initShaderHandles() {
+	// get handle for rendering scene
+	mTechniqueHandle = mWindow->getRenderDevice()->getCurrentEffect()->GetTechniqueByName("NormalMappingDirectionalLighting");
+	ASSERT(mTechniqueHandle != 0, "NormalMappingDirectionalLighting technique returns NULL pointer");
+
+	mTechniqueWireFrameHandle = mWindow->getRenderDevice()->getCurrentEffect()->GetTechniqueByName("NormalMappingDirectionalLightingWireframe");
+	ASSERT(mTechniqueWireFrameHandle != 0, "NormalMappingDirectionalLightingWireframe technique returns NULL pointer");
+
+	// initializing shader handles for scene transform matrices
+	mWorldHandle = mWindow->getRenderDevice()->getCurrentEffect()->GetParameterByName(0, "gWorldMatrix");
+	ASSERT(mWorldHandle != 0, "worldMatrix == NULL");
+	mInverseTransposeHandle = mWindow->getRenderDevice()->getCurrentEffect()->GetParameterByName(0, "gWorldInverseTransposeMatrix");
+	ASSERT(mInverseTransposeHandle != 0, "mInverseTransposeHandle == NULL");
+
+	mViewProjectionHandle = mWindow->getRenderDevice()->getCurrentEffect()->GetParameterByName(0, "gViewProjectionMatrix");
+	ASSERT(mViewProjectionHandle != 0, "projMatrix == NULL");
+
+	// initializing shader handle to camera pos
+	mCameraPosHandle = mWindow->getRenderDevice()->getCurrentEffect()->GetParameterByName(0, "gCameraPos");
+	ASSERT(mCameraPosHandle != 0, "mCameraPosHandle == NULL");
+
+	// initializing shader handles for global ambient
+	mAmbientHandle = mWindow->getRenderDevice()->getCurrentEffect()->GetParameterByName(0, "gGlobalAmbient");
+	ASSERT(mAmbientHandle != 0, "mAmbientHandle == NULL");
+	
+	// light
+	mLightHandle = mWindow->getRenderDevice()->getCurrentEffect()->GetParameterByName(0, "gLight");
+	ASSERT(mLightHandle != 0, "mLightHandle == NULL");
+	
+	// material
+	mMaterialHandle = mWindow->getRenderDevice()->getCurrentEffect()->GetParameterByName(0, "gMaterial");
+	ASSERT(mMaterialHandle != 0, "mMaterialHandle == NULL");
+	
+	// texture
+	mTextureHandle = mWindow->getRenderDevice()->getCurrentEffect()->GetParameterByName(0, "gColorMapTexture");
+	ASSERT(mTextureHandle != 0, "mTextureHandle == NULL");
+
+}
+
+void TestApp::setShaderData() {
+	static D3DXMATRIX world, view, proj;
+	static D3DXMATRIX worldViewProjectionMatrix;
+	static D3DXMATRIX worldInverseTransposeMatrix;
+
+	mSceneCamera->calculateViewMatrix(view);
+	mSceneCamera->calculateProjectionMatrix(proj);
+
+	// Calculate world matrix to transform the cube.
+	D3DXMatrixIdentity(&world);
+
+	// Calculate combined world-view-projection matrix.
+	worldViewProjectionMatrix = view * proj;
+
+	// Calculate the transpose of the inverse of the world matrix.
+	D3DXMatrixInverse(&worldInverseTransposeMatrix, 0, &world);
+	D3DXMatrixTranspose(&worldInverseTransposeMatrix, &worldInverseTransposeMatrix);
+
+	// set technique
+	if(!mWireframeMode)
+		mWindow->getRenderDevice()->getCurrentEffect()->SetTechnique(mTechniqueHandle);
+	else
+		mWindow->getRenderDevice()->getCurrentEffect()->SetTechnique(mTechniqueWireFrameHandle);
+
+	// Set the matrices for the shader.
+	mWindow->getRenderDevice()->getCurrentEffect()->SetMatrix(mWorldHandle, &world);
+
+	mWindow->getRenderDevice()->getCurrentEffect()->SetMatrix(mInverseTransposeHandle, &worldInverseTransposeMatrix);
+	mWindow->getRenderDevice()->getCurrentEffect()->SetMatrix(mViewProjectionHandle, &worldViewProjectionMatrix);
+
+	// Set the camera position.
+	mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mCameraPosHandle, &mSceneCamera->getPosition(), sizeof(D3DXVECTOR3));
+
+	// Set the scene global ambient term.
+	mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mAmbientHandle, &mAmbient, sizeof(D3DXCOLOR));
+
+	// Set the lighting parameters for the shader.
+	mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mLightHandle, &mDirLight, sizeof(PointLight));
+
+	// Set the material parameters for the shader.
+	mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mMaterialHandle, &mMaterial, sizeof(Material));
+
+	// Bind the textures to the shader.
+	mWindow->getRenderDevice()->getCurrentEffect()->SetTexture(mTextureHandle, mWhiteTexture);
 }

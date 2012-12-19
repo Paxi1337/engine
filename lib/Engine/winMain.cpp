@@ -16,7 +16,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	window.initMouse();
 
 	App* testApp = new TestApp(&window);
-
 	window.attachApp(testApp);
 
 	return window.run();
