@@ -97,8 +97,8 @@ CustomVertex3NormalUV verticesCube[] = {
 void TestApp::onCreateDevice() {
 
 	// init and set vertex declaration
-	//initVertexDeclaration();
-	//HR(D3DDEVICE->SetVertexDeclaration(vertexDeclPos3Normal3Tex2Tangent4));
+	initVertexDeclaration();
+	HR(D3DDEVICE->SetVertexDeclaration(vertexDeclPos3Normal3Tex2Tangent4));
 	
 	HR(D3DXCreateTeapot(D3DDEVICE, &gTeapot, NULL));
 
@@ -120,6 +120,11 @@ void TestApp::onCreateDevice() {
 	
 	// setup scene camera
 	mSceneCamera->setPosition(D3DXVECTOR3(0.0f,0.0f,-20.0f));
+
+	char buffer[100];
+
+	sprintf(buffer, "%d", sizeof(*vertexDeclPos3Normal3Tex2Tangent4));
+	OutputDebugStringA(buffer);
 }
 
 void TestApp::onResetDevice() {
@@ -143,9 +148,9 @@ void TestApp::onRender() {
 		mWindow->getRenderDevice()->getCurrentEffect()->Begin(NULL,NULL);
 		mWindow->getRenderDevice()->getCurrentEffect()->BeginPass(0);
 		
-		//mWindow->getRenderDevice()->renderVertexbuffer(D3DPT_TRIANGLELIST, std::string("cube"));
+		mWindow->getRenderDevice()->renderVertexbuffer(D3DPT_TRIANGLELIST, std::string("cube"));
 
-		gTeapot->DrawSubset(0);
+		//gTeapot->DrawSubset(0);
 
 		mWindow->getRenderDevice()->getCurrentEffect()->EndPass();
 		mWindow->getRenderDevice()->getCurrentEffect()->End();

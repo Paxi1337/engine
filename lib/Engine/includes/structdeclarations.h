@@ -14,7 +14,6 @@ typedef struct VertexbufferInfo {
 	LPDIRECT3DVERTEXBUFFER9 buffer;
 	DWORD FVF;
 	DWORD vertexCount;
-
 } *PVertexbufferInfo;
 
 // TODO add constructors and init lists for light structs

@@ -1,5 +1,5 @@
-#include "../includes/DirectX9.h"
-#include "../includes/Timer.h"
+#include "../includes/directX9.h"
+#include "../includes/timer.h"
 #include <string.h>
 
 DirectX9::DirectX9() : mDevice(NULL), mD3D(NULL), mRunningApp(NULL), mCurrentEffect(NULL) {
