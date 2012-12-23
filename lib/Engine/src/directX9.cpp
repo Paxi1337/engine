@@ -55,6 +55,9 @@ void DirectX9::createDevice(HWND window) {
 							   D3DCREATE_SOFTWARE_VERTEXPROCESSING,
 							   &dev_info,
 							   &mDevice);
+
+	// init all vertex declarations
+	VertexDeclarations::initVertexDeclarations(mDevice);
 }
 
 void DirectX9::onCreateDevice() {
@@ -76,6 +79,9 @@ void DirectX9::release() {
 	}
 
 	m_vertexBuffers.clear();
+
+	VertexDeclarations::releaseVertexDeclarations();
+	mCurrentEffect->Release();
 
 	mDevice->Release();
 	mD3D->Release();
@@ -100,35 +106,22 @@ int DirectX9::calcPrimitiveCount(D3DPRIMITIVETYPE primitiveType, const DWORD num
 	}
 }
 
-//TODO: FVF not needed anymore, implement another way of getting size
-// in this case there are already ambigous values therefore last struct is outcommented
-int DirectX9::calcCustomStructSize(DWORD FVF) {
-	switch(FVF) {
-		case CUSTOMVERTEX3NORMALUVTANGENTFORMAT:
-			return sizeof(CustomVertex3NormalUVTangent);
-		case CUSTOMVERTEX3NORMALFORMAT:
+int DirectX9::calcCustomStructSize(DWORD vertexType) {
+	switch(vertexType) {
+		case CUSTOMVERTEX3NORMAL:
 			return sizeof(CustomVertex3Normal);
-		case CUSTOMVERTEX3COLORUVFORMAT:
-			return sizeof(CustomVertex3ColorUV);
-		case CUSTOMVERTEX3COLORFORMAT:
-			return sizeof(CustomVertex3Color);
-		case CUSTOMVERTEXTRANSFORMEDCOLORFORMAT:
-			return sizeof(CustomVertexTransformedColor);
-		case CUSTOMVERTEX3NORMALUVFORMAT:
+		case CUSTOMVERTEX3NORMALUV:
 			return sizeof(CustomVertex3NormalUV);
-		/*case CUSTOMVERTEX4NORMALUVFORMAT:
-			return sizeof(CustomVertex4NormalUV);*/
-		
+		case CUSTOMVERTEX3NORMALUVTANGENT:
+			return sizeof(CustomVertex3NormalUVTangent);
+		case CUSTOMVERTEX3COLOR:
+			return sizeof(CustomVertex3Color);
+		case CUSTOMVERTEX3UV:
+			return sizeof(CustomVertex3UV);
+		case CUSTOMVERTEXTRANSFORMEDCOLOR:
+			return sizeof(CustomVertexTransformedColor);
 		default: return -1;
 	}
-}
-
-void DirectX9::setRenderState(D3DRENDERSTATETYPE renderState, const DWORD stateValue) {
-	mDevice->SetRenderState(renderState, stateValue);
-}
-
-void DirectX9::setTransform(D3DTRANSFORMSTATETYPE transformState, const D3DMATRIX* pMatrix) {
-	mDevice->SetTransform(transformState, pMatrix);
 }
 
 void DirectX9::userDefinedFunction() {
@@ -166,7 +159,7 @@ VertexbufferInfo* DirectX9::createVertexBuffer(const DWORD numberOfVertices, con
 	VertexbufferInfo* info = new VertexbufferInfo;
 
 	// create the vertex buffer before otherwise the call to CreateVertexBuffer will zero out the next DWORD in the VertexBufferInfo struct
-	mDevice->CreateVertexBuffer(numberOfVertices*vertexStructSize, 0, FVF, D3DPOOL_MANAGED, &info->buffer, NULL);
+	mDevice->CreateVertexBuffer(numberOfVertices*vertexStructSize, 0, 0, D3DPOOL_MANAGED, &info->buffer, NULL);
 
 	info->FVF = FVF;
 	info->vertexCount = numberOfVertices;
@@ -195,11 +188,6 @@ void DirectX9::renderVertexbuffer(D3DPRIMITIVETYPE type, std::string tag) {
 		
 		int vertexStructSize = calcCustomStructSize(vb->FVF);
 		int primitiveCount = calcPrimitiveCount(type, vb->vertexCount);
-
-		// not needed with shader support anymore
-		//if(FAILED(mDevice->SetFVF(vb->FVF))) {
-		//	return;
-		//}
 
 		if(FAILED(mDevice->SetStreamSource(0, vb->buffer, 0, vertexStructSize))){
 			return;

@@ -16,11 +16,6 @@ const float kCameraMovementSpeed=0.4f;
 const float kCameraRotationSpeed=0.01f;
 const float lightRotationSpeed=0.1f;
 
-LPD3DXMESH gTeapot;
-
-// vertex declarations
-IDirect3DVertexDeclaration9* vertexDeclPos3Normal3Tex2Tangent4 = 0;
-
 TestApp::TestApp(Window* window) : mWindow(window), 
 													 mBuffer(NULL),
 													 mTimeSinceElapsedTimeReset(0.0f), 
@@ -31,17 +26,6 @@ TestApp::TestApp(Window* window) : mWindow(window),
 
 TestApp::~TestApp() {
 
-}
-
-void TestApp::initVertexDeclaration() {
-	D3DVERTEXELEMENT9 vertexElementPos3Normal3Tex2Tangent4[] = {
-            {0, 0,  D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0},
-            {0, 12, D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_NORMAL, 0},
-            {0, 24, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0},
-			{0, 32, D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TANGENT, 0}, 
-            D3DDECL_END()
-    };   
-	HR(mWindow->getRenderDevice()->getD3D9Device()->CreateVertexDeclaration(vertexElementPos3Normal3Tex2Tangent4, &vertexDeclPos3Normal3Tex2Tangent4));
 }
 
 CustomVertex3NormalUV verticesCube[] = {
@@ -96,11 +80,8 @@ CustomVertex3NormalUV verticesCube[] = {
 
 void TestApp::onCreateDevice() {
 
-	// init and set vertex declaration
-	initVertexDeclaration();
-	HR(D3DDEVICE->SetVertexDeclaration(vertexDeclPos3Normal3Tex2Tangent4));
-	
-	HR(D3DXCreateTeapot(D3DDEVICE, &gTeapot, NULL));
+	// set vertex delaration	
+	mWindow->getRenderDevice()->setVertexDeclaration(CustomVertex3NormalUV::decl);
 
 	// load shader
 	mWindow->getRenderDevice()->loadEffectFromFile("./shader/basic.fx");
@@ -112,7 +93,7 @@ void TestApp::onCreateDevice() {
 	initLight();
 
 	// create and init cube
-	mBuffer = mWindow->getRenderDevice()->createVertexBuffer(36, CUSTOMVERTEX3NORMALUVFORMAT, std::string("cube"));
+	mBuffer = mWindow->getRenderDevice()->createVertexBuffer(36, CUSTOMVERTEX3NORMALUV, std::string("cube"));
 	mWindow->getRenderDevice()->setVertexBufferData(std::string("cube"), verticesCube); 
 
 	// init shader handles
@@ -120,11 +101,6 @@ void TestApp::onCreateDevice() {
 	
 	// setup scene camera
 	mSceneCamera->setPosition(D3DXVECTOR3(0.0f,0.0f,-20.0f));
-
-	char buffer[100];
-
-	sprintf(buffer, "%d", sizeof(*vertexDeclPos3Normal3Tex2Tangent4));
-	OutputDebugStringA(buffer);
 }
 
 void TestApp::onResetDevice() {
@@ -149,8 +125,6 @@ void TestApp::onRender() {
 		mWindow->getRenderDevice()->getCurrentEffect()->BeginPass(0);
 		
 		mWindow->getRenderDevice()->renderVertexbuffer(D3DPT_TRIANGLELIST, std::string("cube"));
-
-		//gTeapot->DrawSubset(0);
 
 		mWindow->getRenderDevice()->getCurrentEffect()->EndPass();
 		mWindow->getRenderDevice()->getCurrentEffect()->End();
@@ -283,8 +257,8 @@ void TestApp::initShaderHandles() {
 	ASSERT(mMaterialHandle != 0, "mMaterialHandle == NULL");
 	
 	// texture
-	mTextureHandle = mWindow->getRenderDevice()->getCurrentEffect()->GetParameterByName(0, "gColorMapTexture");
-	ASSERT(mTextureHandle != 0, "mTextureHandle == NULL");
+	//mTextureHandle = mWindow->getRenderDevice()->getCurrentEffect()->GetParameterByName(0, "gColorMapTexture");
+	//ASSERT(mTextureHandle != 0, "mTextureHandle == NULL");
 
 }
 
@@ -331,5 +305,5 @@ void TestApp::setShaderData() {
 	mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mMaterialHandle, &mMaterial, sizeof(Material));
 
 	// Bind the textures to the shader.
-	mWindow->getRenderDevice()->getCurrentEffect()->SetTexture(mTextureHandle, mWhiteTexture);
+	//mWindow->getRenderDevice()->getCurrentEffect()->SetTexture(mTextureHandle, mWhiteTexture);
 }

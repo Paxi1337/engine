@@ -33,14 +33,6 @@ public:
 
 	// get pointer to IDirect3DDevice interface
 	LPDIRECT3DDEVICE9 getD3D9Device() const;
-	
-	// render states
-	// has no affects anymore since shaders are used
-	void setRenderState(D3DRENDERSTATETYPE renderState, const DWORD value);
-	
-	// render states
-	// has no affects anymore since shaders are used
-	void setTransform(D3DTRANSFORMSTATETYPE transformState, const D3DMATRIX* pMatrix);
 
 	// vertex buffer functions
 	VertexbufferInfo* createVertexBuffer(const DWORD numberOfVertices, const DWORD FVF, std::string tag);
@@ -76,16 +68,7 @@ public:
 	void loadEffectFromFile(const char* effectFileName);
 	inline const LPD3DXEFFECT getCurrentEffect() const { return mCurrentEffect; }
 
-	// http://www.mvps.org/directx/articles/d3dxmesh.htm
-	// TODO LPD3DXMESH createMesh();
-	// class for creating meshes?
-
-
-	void enableLighting() const { if(mDevice) mDevice->SetRenderState(D3DRS_LIGHTING, TRUE); };
-	void disableLighting() const { if(mDevice) mDevice->SetRenderState(D3DRS_LIGHTING, FALSE); };
-
-	void enableStencilBuffer() const { if(mDevice) mDevice->SetRenderState(D3DRS_STENCILENABLE, TRUE); }
-	void disableStencilBuffer() const { if(mDevice) mDevice->SetRenderState(D3DRS_STENCILENABLE, FALSE); }
+	inline void setVertexDeclaration(IDirect3DVertexDeclaration9* decl) { VertexDeclarations::activateVertexDeclaration(mDevice, decl); }
 
 private:
 

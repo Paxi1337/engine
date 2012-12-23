@@ -8,15 +8,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
+	{
+		Window window(hInstance, nCmdShow);
 
-	Window window(hInstance, nCmdShow);
+		window.initWindowClass(CS_HREDRAW | CS_VREDRAW, "WindowClass1");
+		window.createWindowInitDirectX("Debug", 300, 300, 800, 640);
+		window.initMouse();
 
-	window.initWindowClass(CS_HREDRAW | CS_VREDRAW, "WindowClass1");
-	window.createWindowInitDirectX("Debug", 300, 300, 800, 640);
-	window.initMouse();
+		App* testApp = new TestApp(&window);
+		window.attachApp(testApp);
 
-	App* testApp = new TestApp(&window);
-	window.attachApp(testApp);
-
-	return window.run();
+		return window.run();
+	}
 }

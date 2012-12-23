@@ -149,31 +149,33 @@ LRESULT Window::messageCallbackInternal(HWND hWnd, UINT message, WPARAM wParam, 
     // handle the given message
     switch(message)
     {
-	case WM_CLOSE:
+		case WM_CLOSE:
 		{
 			DestroyWindow(hWnd);
 			break;
 		}
         // case WM_DESTROY when window gets closed
         case WM_DESTROY:
-			{
-				PostQuitMessage(0);
-				break;
-			}
+		{
+			PostQuitMessage(0);
+			break;
+		}
 		case WM_KEYDOWN:
+		{
 			m_renderDevice->dispatchKeyMessage(wParam);
 			break;
+		}
 		case WM_INPUT:
-			{
-				GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), 
-					RID_INPUT,
-					&inputData,
-					&dataSize,
-					sizeof(RAWINPUTHEADER));
+		{
+			GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), 
+				RID_INPUT,
+				&inputData,
+				&dataSize,
+				sizeof(RAWINPUTHEADER));
 
-				m_renderDevice->dispatchRawMouseInput(inputData);
-			}
-			break;
+			m_renderDevice->dispatchRawMouseInput(inputData);
+		}
+		break;
 		default: return DefWindowProc (hWnd, message, wParam, lParam);
     }
 

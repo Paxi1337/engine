@@ -23,7 +23,6 @@ public:
 
 	void initLight();
 	void initCube();
-	void initVertexDeclaration();
 	
 	void setShaderData();
 	void initShaderHandles();
