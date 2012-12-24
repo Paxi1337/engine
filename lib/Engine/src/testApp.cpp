@@ -2,6 +2,8 @@
 #include "../includes/freeCamera.h"
 #include "../includes/timer.h"
 
+#include "../assimp_3_0/include/Importer.hpp"
+
 #include <vector>
 #include <algorithm>
 #include <cmath>
@@ -79,6 +81,9 @@ CustomVertex3NormalUV verticesCube[] = {
 };
 
 void TestApp::onCreateDevice() {
+
+	Assimp::Importer importer;
+
 
 	// set vertex delaration	
 	mWindow->getRenderDevice()->setVertexDeclaration(CustomVertex3NormalUV::decl);
