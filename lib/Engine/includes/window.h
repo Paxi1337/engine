@@ -1,5 +1,5 @@
-#ifndef __WINDOWS_H
-#define __WINDOWS_H
+#ifndef WINDOWS_H
+#define WINDOWS_H
 
 #include <cstdio>
 #include <Windows.h>

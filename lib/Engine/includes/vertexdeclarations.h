@@ -18,6 +18,13 @@ struct CustomVertex3Normal {
 #define CUSTOMVERTEX3NORMAL 1
 
 struct CustomVertex3NormalUV {
+	
+	//CustomVertex3NormalUV() {}
+	//CustomVertex3NormalUV(D3DXVECTOR3 _pos, D3DXVECTOR3 _normal, FLOAT _u, FLOAT _v) : pos(_pos), 
+	//																				   normal(_normal), 
+	//																				   u(_u), 
+	//																				   v(_v) {}
+
 	D3DXVECTOR3 pos;
 	D3DXVECTOR3 normal;
 	FLOAT u,v;

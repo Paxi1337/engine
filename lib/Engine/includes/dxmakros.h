@@ -15,6 +15,8 @@
 			}
 	#endif
 
+	#define SAFERELEASECOM(x) { if(x){ x->Release();x = 0; } }
+
 #endif
 
 

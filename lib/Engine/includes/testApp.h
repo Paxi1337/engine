@@ -31,7 +31,8 @@ private:
 	Window* mWindow;
 
 	VertexbufferInfo* mBuffer;
-	
+	VertexbufferInfo* mSpider;
+
 	D3DXHANDLE mTechniqueHandle;
 	D3DXHANDLE mTechniqueWireFrameHandle;
 
