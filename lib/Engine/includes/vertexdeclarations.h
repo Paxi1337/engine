@@ -41,25 +41,35 @@ struct CustomVertex3NormalUVTangent {
 };
 #define CUSTOMVERTEX3NORMALUVTANGENT 3
 
+struct CustomVertex3NormalUVTangentBinormal {
+	D3DXVECTOR3 pos;
+	D3DXVECTOR3 normal;
+	FLOAT u,v;
+	D3DXVECTOR3 tangent;
+	D3DXVECTOR3 binormal;
+	static IDirect3DVertexDeclaration9* decl;
+};
+#define CUSTOMVERTEX3NORMALUVTANGENTBINORMAL 4
+
 struct CustomVertexTransformedColor {
 	D3DXVECTOR4 pos;
 	DWORD color;
 	static IDirect3DVertexDeclaration9* decl;
 };
-#define CUSTOMVERTEXTRANSFORMEDCOLOR 4
+#define CUSTOMVERTEXTRANSFORMEDCOLOR 5
 
 struct CustomVertex3Color {
 	D3DXVECTOR3 mVec;
 	DWORD mColor;
 	static IDirect3DVertexDeclaration9* decl;
 };
-#define CUSTOMVERTEX3COLOR 5
+#define CUSTOMVERTEX3COLOR 6
 
 struct CustomVertex3UV {
 	D3DXVECTOR3 xyz;
 	DWORD u,v;
 	static IDirect3DVertexDeclaration9* decl;
 };
-#define CUSTOMVERTEX3UV 6
+#define CUSTOMVERTEX3UV 7
 
 #endif

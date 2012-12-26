@@ -1,6 +1,5 @@
 #include "../includes/testApp.h" 
 #include "../includes/freeCamera.h"
-#include "../includes/timer.h"
 
 #include "../assimp_3_0/include/Importer.hpp"
 #include "../assimp_3_0/include/scene.h"
@@ -13,8 +12,6 @@
 #define D3DDEVICE mWindow->getRenderDevice()->getD3D9Device()
 
 // REMAINDER: may use constant shader table
-
-Timer t;
 
 const float kCameraMovementSpeed=0.4f;
 const float kCameraRotationSpeed=0.01f;
@@ -146,18 +143,18 @@ void TestApp::onUpdate() {
 
 void TestApp::onRender() {
 	if(mWindow) {
-		t.start();
+		mT.start();
 
 		mWindow->getRenderDevice()->getCurrentEffect()->Begin(NULL,NULL);
 		mWindow->getRenderDevice()->getCurrentEffect()->BeginPass(0);
 		
-		mWindow->getRenderDevice()->renderVertexbuffer(D3DPT_TRIANGLELIST, std::string("spider"));
+		mWindow->getRenderDevice()->renderVertexbuffer(D3DPT_TRIANGLELIST, std::string("cube"));
 
 		mWindow->getRenderDevice()->getCurrentEffect()->EndPass();
 		mWindow->getRenderDevice()->getCurrentEffect()->End();
 
-		t.stop();
-		float elapsedTime = t.getElapsedTimeInMilliSec();
+		mT.stop();
+		float elapsedTime = mT.getElapsedTimeInMilliSec();
 		mTimeSinceElapsedTimeReset = mTimeSinceElapsedTimeReset + elapsedTime;
 	}
 }

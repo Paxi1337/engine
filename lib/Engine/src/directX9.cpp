@@ -114,6 +114,8 @@ int DirectX9::calcCustomStructSize(DWORD vertexType) {
 			return sizeof(CustomVertex3NormalUV);
 		case CUSTOMVERTEX3NORMALUVTANGENT:
 			return sizeof(CustomVertex3NormalUVTangent);
+		case CUSTOMVERTEX3NORMALUVTANGENTBINORMAL:
+			return sizeof(CustomVertex3NormalUVTangentBinormal);
 		case CUSTOMVERTEX3COLOR:
 			return sizeof(CustomVertex3Color);
 		case CUSTOMVERTEX3UV:
@@ -136,7 +138,6 @@ void DirectX9::renderFrame() {
 
 	mDevice->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(100, 149, 237), 1.0f, 0);
 	mDevice->Clear(0, NULL, D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
-	//mDevice->Clear(0, NULL, D3DCLEAR_STENCIL, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
 
 	mDevice->BeginScene();
 	

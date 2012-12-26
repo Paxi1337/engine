@@ -2,6 +2,7 @@
 #define __SHADOWAPP_H
 
 #include "Window.h"
+#include "timer.h"
 #include "FreeCamera.h"
 #include "drawable_tex2D.h"
 
@@ -59,6 +60,8 @@ private:
 	bool mWireframeMode;
 
 	double mTimeSinceElapsedTimeReset;
+
+	Timer mT;
 };
 
 #endif

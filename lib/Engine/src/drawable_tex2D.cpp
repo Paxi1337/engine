@@ -34,5 +34,5 @@ void DrawableTexture2D::endScene() {
 }
 
 void DrawableTexture2D::dumpToFileA(LPCSTR filename) const {
-	D3DXSaveTextureToFileA(filename,D3DXIFF_PNG,mTex,NULL);
+	D3DXSaveSurfaceToFileA(filename, D3DXIFF_DDS, mTopSurf, NULL, NULL);
 }

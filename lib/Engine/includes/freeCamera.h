@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FREECAMERA_H
+#define FREECAMERA_H
 
 #include <d3dx9.h>
 
@@ -24,7 +25,8 @@ public:
 	inline float getYaw() const { return mYaw; }
 	inline float getPitch() const { return mPitch; }
 	inline float getRoll() const { return mRoll; }
-	inline D3DXVECTOR3 getPosition() const { return mPosition; }	
+	inline D3DXVECTOR3 getPosition() const { return mPosition; }
+	inline D3DXVECTOR3 getLookAt() const { return mLook; }
 	inline void setPosition(const D3DXVECTOR3& newPosition) { mPosition = newPosition; }
 	inline void setLookAt(const D3DXVECTOR3& newLookAt) { mLook = newLookAt; }
 	
@@ -38,3 +40,6 @@ public:
 	void pitch(float amount); // rotate around x axis
 	void roll(float amount); // rotate around z axis	
 };
+
+
+#endif
