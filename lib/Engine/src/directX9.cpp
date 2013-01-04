@@ -28,8 +28,8 @@ void DirectX9::createDevice(HWND window) {
 	
 	dev_info.BackBufferCount = 1; // 1 back buffer (double buffering)
 	dev_info.SwapEffect = D3DSWAPEFFECT_DISCARD; // discard previous frame
-	dev_info.MultiSampleType = D3DMULTISAMPLE_4_SAMPLES; // no multi sampling
-	dev_info.MultiSampleQuality = 0; // no multi sampling
+	dev_info.MultiSampleType = D3DMULTISAMPLE_8_SAMPLES;
+	dev_info.MultiSampleQuality = 2; 
 	dev_info.hDeviceWindow = window;
 	dev_info.Flags = 0;
 	dev_info.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
@@ -58,6 +58,7 @@ void DirectX9::createDevice(HWND window) {
 
 	// init all vertex declarations
 	VertexDeclarations::initVertexDeclarations(mDevice);
+	
 }
 
 void DirectX9::onCreateDevice() {
@@ -231,79 +232,6 @@ void DirectX9::dispatchRawMouseInput(RAWINPUT const& rawMouseInput) {
 		mRunningApp->onRawMouseInputReceived(rawMouseInput);
 	}
 }
-
-//DWORD DirectX9::loadMeshFromFile(const char* xFileName) {
-//	DWORD numberOfMaterials = 0;
-//	LPD3DXBUFFER airplaneMaterials;
-//	//LPD3DXMESH tmpMesh;
-//
-//	HR(D3DXLoadMeshFromXA(xFileName, 
-//					  D3DXMESH_SYSTEMMEM, 
-//					  mDevice, 
-//					  NULL, 
-//					  &airplaneMaterials, 
-//					  NULL, 
-//					  &numberOfMaterials, 
-//					  &mCurrentMesh));
-//
-//	
-//	D3DXMATERIAL* tmpMaterials = static_cast<D3DXMATERIAL*>(airplaneMaterials->GetBufferPointer());
-//	
-//	mCurrentMaterials = new D3DMATERIAL9[numberOfMaterials];
-//	mCurrentTexture = new LPDIRECT3DTEXTURE9[numberOfMaterials];
-//	mCurrentShadowTexture = new LPDIRECT3DTEXTURE9[numberOfMaterials];
-//
-//	for(int i=0; i<numberOfMaterials;++i) {
-//		mCurrentMaterials[i] = tmpMaterials[i].MatD3D;
-//		mCurrentMaterials[i].Ambient = mCurrentMaterials[i].Diffuse;
-//		
-//		//OutputDebugStringA(tmpMaterials[i].pTextureFilename);
-//		
-//		
-//
-//
-//		if(FAILED(D3DXCreateTextureFromFileA(mDevice, tmpMaterials[i].pTextureFilename, &mCurrentTexture[i]))) {
-//				mCurrentTexture[i] = NULL;    // if there is no texture, set the texture to NULL
-//				mCurrentShadowTexture[i] = NULL; 
-//			}
-//		
-//		//if(FAILED(D3DXCreateTextureFromFileA(m_pDevice, tmpMaterials[i].pTextureFilename, &mCurrentShadowTexture[i]))) {
-//		//	//mCurrentTexture[i] = NULL;    // if there is no texture, set the texture to NULL
-//		//	mCurrentShadowTexture[i] = NULL; 
-//		//}
-//
-//		if(mCurrentTexture[i] != NULL) {
-//			std::string blackTex;	
-//			// getting name for according shadow texture
-//			if(strcmp(tmpMaterials[i].pTextureFilename, "bihull.bmp") == 0) {
-//				blackTex = std::string("bihullb.bmp");
-//
-//			}
-//			else if(strcmp(tmpMaterials[i].pTextureFilename, "wings.bmp") == 0) {
-//				blackTex = std::string("wingsb.bmp");
-//			}
-//
-//			D3DXCreateTextureFromFileA(mDevice, blackTex.c_str(), &mCurrentShadowTexture[i]);
-//		}
-//		
-//			
-//		
-//
-//
-//		//blackTexture.append(tmpMaterials[i].pTextureFilename);
-//		/*std::string orig(tmpMaterials[i].pTextureFilename);
-//		std::string a("bihull.bmp");
-//		if(orig.compare(a)) {}*/
-//
-//											 
-//
-//			//blackTexture.append('b');
-//			
-//		
-//	}
-//
-//	return numberOfMaterials;
-//}
 
 void DirectX9::loadEffectFromFile(const char* effectFileName) {
 	LPD3DXBUFFER errorLog;

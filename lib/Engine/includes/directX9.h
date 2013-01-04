@@ -55,15 +55,6 @@ public:
 	void dispatchKeyMessage(WPARAM keyCode);
 	void dispatchRawMouseInput(RAWINPUT const& rawMouseInput);
 
-	// returns the number of materials
-	// TODO: mesh loader
-	//DWORD loadMeshFromFile(const char* xFileName);
-
-	/*inline const D3DMATERIAL9* getCurrentMeshMaterials() const { return mCurrentMaterials; }
-	inline const LPDIRECT3DTEXTURE9* getCurrentMeshTexture() const { return mCurrentTexture; }
-	inline const LPDIRECT3DTEXTURE9* getCurrentShadowTexture() const { return mCurrentShadowTexture; }
-	inline const LPD3DXMESH getCurrentMesh() const { return mCurrentMesh; }	*/
-
 	// TODO: shader class
 	void loadEffectFromFile(const char* effectFileName);
 	inline const LPD3DXEFFECT getCurrentEffect() const { return mCurrentEffect; }
@@ -99,14 +90,7 @@ private:
 	int m_windowWidth;
 	int m_windowHeight;
 	
-	//D3DMATERIAL9* mCurrentMaterials;
-	//LPDIRECT3DTEXTURE9* mCurrentTexture;
-	//LPDIRECT3DTEXTURE9* mCurrentShadowTexture;
-	//LPD3DXMESH mCurrentMesh;
-	
 	LPD3DXEFFECT mCurrentEffect;
-
-	
 };
 
 #endif

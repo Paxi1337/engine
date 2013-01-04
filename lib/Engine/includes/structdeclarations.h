@@ -18,11 +18,11 @@ typedef struct VertexbufferInfo {
 
 // TODO add constructors and init lists for light structs
 typedef struct SpotLight {
+	D3DXVECTOR3 posW;
+	D3DXVECTOR3 dirW;  
 	D3DXCOLOR ambient;
 	D3DXCOLOR diffuse;
 	D3DXCOLOR spec;
-	D3DXVECTOR3 posW;
-	D3DXVECTOR3 dirW;  
 	float spotPower;
 } *PSpotlight;
 

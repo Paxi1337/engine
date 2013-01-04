@@ -1,9 +1,9 @@
 #include "../includes/testApp.h" 
 #include "../includes/freeCamera.h"
 
-#include "../assimp_3_0/include/Importer.hpp"
-#include "../assimp_3_0/include/scene.h"
-#include "../assimp_3_0/include/mesh.h"
+//#include "../assimp_3_0/include/Importer.hpp"
+//#include "../assimp_3_0/include/scene.h"
+//#include "../assimp_3_0/include/mesh.h"
 
 #include <vector>
 #include <algorithm>
@@ -83,23 +83,23 @@ CustomVertex3NormalUV verticesCube[] = {
 
 void TestApp::onCreateDevice() {
 
-	Assimp::Importer importer;
-	
-	const aiScene* scene = importer.ReadFile("model/spider/spider.obj", 0);
-	
-	if(scene == NULL) {
-		OutputDebugStringA(importer.GetErrorString());
-		OutputDebugStringA("\n");
-	}
+	//Assimp::Importer importer;
+	//
+	//const aiScene* scene = importer.ReadFile("model/spider/spider.obj", 0);
+	//
+	//if(scene == NULL) {
+	//	OutputDebugStringA(importer.GetErrorString());
+	//	OutputDebugStringA("\n");
+	//}
 
-	aiMesh** mesh = scene->mMeshes;
-	
-	int numVerticesSpider = (*mesh)->mNumVertices;
-	spider = new CustomVertex3NormalUV[numVerticesSpider];
+	//aiMesh** mesh = scene->mMeshes;
+	//
+	//int numVerticesSpider = (*mesh)->mNumVertices;
+	//spider = new CustomVertex3NormalUV[numVerticesSpider];
 
-	for(int i = 0; i < numVerticesSpider; ++i) {
-		// still have to to check out how this actually works
-	}
+	//for(int i = 0; i < numVerticesSpider; ++i) {
+	//	// still have to to check out how this actually works
+	//}
 
 	// set vertex delaration	
 	mWindow->getRenderDevice()->setVertexDeclaration(CustomVertex3NormalUV::decl);
@@ -117,8 +117,8 @@ void TestApp::onCreateDevice() {
 	mBuffer = mWindow->getRenderDevice()->createVertexBuffer(36, CUSTOMVERTEX3NORMALUV, std::string("cube"));
 	mWindow->getRenderDevice()->setVertexBufferData(std::string("cube"), verticesCube);
 
-	mSpider = mWindow->getRenderDevice()->createVertexBuffer(numVerticesSpider, CUSTOMVERTEX3NORMALUV, std::string("spider"));
-	mWindow->getRenderDevice()->setVertexBufferData(std::string("spider"), spider);
+	//mSpider = mWindow->getRenderDevice()->createVertexBuffer(numVerticesSpider, CUSTOMVERTEX3NORMALUV, std::string("spider"));
+	//mWindow->getRenderDevice()->setVertexBufferData(std::string("spider"), spider);
 
 	// init shader handles
 	initShaderHandles();
