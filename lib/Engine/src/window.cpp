@@ -49,7 +49,7 @@ bool Window::initMouse() {
 	mouse.usUsage = 0x02;    // register mouse
 	mouse.usUsagePage = 0x01;    // top-level mouse
 	mouse.dwFlags = NULL;    // flags
-	mouse.hwndTarget = m_hWindow;    // handle to a window
+	mouse.hwndTarget = 0;    // handle to a window
 
 	RegisterRawInputDevices(&mouse, 1, sizeof(RAWINPUTDEVICE));    // register the device
 	
