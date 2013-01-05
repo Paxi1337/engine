@@ -61,11 +61,25 @@ void DirectX9::createDevice(HWND window) {
 
 
 	// see http://www.nvidia.com/object/coverage-sampled-aa.html
-	DWORD none[2] = {D3DMULTISAMPLE_NONE , 0};
-	DWORD csaa8x[2] = {D3DMULTISAMPLE_4_SAMPLES , 2};
-	DWORD csaa8xQ[2] = {D3DMULTISAMPLE_8_SAMPLES , 0};
-	DWORD csaa16x[2] = {D3DMULTISAMPLE_4_SAMPLES , 4};
-	DWORD csaa16xQ[2] = {D3DMULTISAMPLE_8_SAMPLES , 2};
+	DWORD* none = new DWORD[2];
+	none[0] = D3DMULTISAMPLE_NONE;
+	none[1] = 0;
+
+	DWORD* csaa8x = new DWORD[2];
+	csaa8x[0] = D3DMULTISAMPLE_4_SAMPLES;
+	csaa8x[1] = 2;
+	
+	DWORD* csaa8xQ = new DWORD[2];
+	csaa8xQ[0] = D3DMULTISAMPLE_8_SAMPLES;
+	csaa8xQ[1] = 0;
+
+	DWORD* csaa16x = new DWORD[2];
+	csaa8x[0] = D3DMULTISAMPLE_4_SAMPLES;
+	csaa8x[1] = 4;
+
+	DWORD* csaa16xQ = new DWORD[2];
+	csaa8x[0] = D3DMULTISAMPLE_8_SAMPLES;
+	csaa8x[1] = 2;
 
 	// supported MSAA modes are not checked so far (currenlty assuming the App runs under GTX680 & GTX650M)
 	mSupportedMSAAModes.insert(std::pair<std::string, DWORD*>("NONE", none));
@@ -99,6 +113,14 @@ void DirectX9::release() {
 
 	mDevice->Release();
 	mD3D->Release();
+
+	std::map<std::string,DWORD*>::iterator it;
+	it = mSupportedMSAAModes.begin();
+	while(it != mSupportedMSAAModes.end()) {
+		delete(iter->second);
+		++iter;
+	}
+	mSupportedMSAAModes.clear();
 }
 
 int DirectX9::calcPrimitiveCount(D3DPRIMITIVETYPE primitiveType, const DWORD numberOfVertices) {

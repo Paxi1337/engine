@@ -429,12 +429,23 @@ void TestApp::createShadowMap() {
 
 
 void TestApp::changeDeviceInfo() {
-	//D3DPRESENT_PARAMETERS newDevInfo;
 	D3DPRESENT_PARAMETERS* currentDevInfo = mWindow->getRenderDevice()->getDeviceInfo();
 
-	//memcpy(&newDevInfo, currentDevInfo, sizeof(D3DPRESENT_PARAMETERS));
-	//newDevInfo.Flags = 0;
-	//VertexDeclarations::releaseVertexDeclarations();
+	//DWORD currentMSAAType = currentDevInfo->MultiSampleType;
+	//DWORD currentMSAAQuality = currentDevInfo->MultiSampleQuality; 
+
+	std::map<std::string, DWORD*>::const_iterator it = mWindow->getRenderDevice()->getMSAAModes().find("CSAA8x");
+
+	DWORD* val = it->second;
+
+	if(currentDevInfo->MultiSampleType == D3DMULTISAMPLE_NONE && currentDevInfo->MultiSampleQuality == 0) {
+		currentDevInfo->MultiSampleType = static_cast<D3DMULTISAMPLE_TYPE>(val[0]);
+		currentDevInfo->MultiSampleQuality = val[1];
+	}
+	else {
+		currentDevInfo->MultiSampleType = D3DMULTISAMPLE_NONE;
+		currentDevInfo->MultiSampleQuality = 0;
+	}
 
 	mWindow->getRenderDevice()->getCurrentEffect()->Release();
 	mWhiteTexture->Release();
@@ -445,11 +456,4 @@ void TestApp::changeDeviceInfo() {
 
 	mWindow->getRenderDevice()->resetDevice(currentDevInfo);
 
-	
-	int abc = 5;
-	/*VertexDeclarations::initVertexDeclarations(D3DDEVICE);
-	mWindow->getRenderDevice()->setVertexDeclaration(CustomVertex3NormalUV::decl);
-	mWindow->getRenderDevice()->loadEffectFromFile("./shader/basic.fx");
-	initShaderHandles();
-*/
 }
