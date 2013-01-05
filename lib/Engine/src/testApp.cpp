@@ -101,6 +101,9 @@ void TestApp::onCreateDevice() {
 	//	// still have to to check out how this actually works
 	//}
 
+
+	
+
 	// set vertex delaration	
 	mWindow->getRenderDevice()->setVertexDeclaration(CustomVertex3NormalUV::decl);
 
@@ -108,14 +111,14 @@ void TestApp::onCreateDevice() {
 	mWindow->getRenderDevice()->loadEffectFromFile("./shader/basic.fx");
 
 	// load textures
-	HR(D3DXCreateTextureFromFileA(D3DDEVICE, "./texture/white.jpg", &mWhiteTexture));
+	//HR(D3DXCreateTextureFromFileA(D3DDEVICE, "./texture/white.jpg", &mWhiteTexture));
 
 	// init light
 	initLight();
 
 	// create and init cube
-	mBuffer = mWindow->getRenderDevice()->createVertexBuffer(36, CUSTOMVERTEX3NORMALUV, std::string("cube"));
-	mWindow->getRenderDevice()->setVertexBufferData(std::string("cube"), verticesCube);
+	//mBuffer = mWindow->getRenderDevice()->createVertexBuffer(36, CUSTOMVERTEX3NORMALUV, std::string("cube"));
+	//mWindow->getRenderDevice()->setVertexBufferData(std::string("cube"), verticesCube);
 
 	//mSpider = mWindow->getRenderDevice()->createVertexBuffer(numVerticesSpider, CUSTOMVERTEX3NORMALUV, std::string("spider"));
 	//mWindow->getRenderDevice()->setVertexBufferData(std::string("spider"), spider);
@@ -128,7 +131,8 @@ void TestApp::onCreateDevice() {
 }
 
 void TestApp::onResetDevice() {
-
+	// set vertex delaration	
+	
 }
 
 void TestApp::onReleaseDevice() {
@@ -144,11 +148,11 @@ void TestApp::onUpdate() {
 void TestApp::onRender() {
 	if(mWindow) {
 		mT.start();
-
+		
 		mWindow->getRenderDevice()->getCurrentEffect()->Begin(NULL,NULL);
 		mWindow->getRenderDevice()->getCurrentEffect()->BeginPass(0);
 		
-		mWindow->getRenderDevice()->renderVertexbuffer(D3DPT_TRIANGLELIST, std::string("cube"));
+		//mWindow->getRenderDevice()->renderVertexbuffer(D3DPT_TRIANGLELIST, std::string("cube"));
 
 		mWindow->getRenderDevice()->getCurrentEffect()->EndPass();
 		mWindow->getRenderDevice()->getCurrentEffect()->End();
@@ -168,6 +172,7 @@ void TestApp::setWindow(Window* window) {
 }
 
 void TestApp::onKeyPressed(WPARAM keyCode) {
+	
 
 	switch(keyCode) {	
 	case 'W':
@@ -186,7 +191,7 @@ void TestApp::onKeyPressed(WPARAM keyCode) {
 		mWireframeMode ? mWireframeMode = false : mWireframeMode = true;
 		break;
 	case VK_UP:
-		
+		changeDeviceInfo();
 		break;
 	case VK_DOWN:
 		
@@ -280,6 +285,7 @@ void TestApp::initShaderHandles() {
 	mMaterialHandle = mWindow->getRenderDevice()->getCurrentEffect()->GetParameterByName(0, "gMaterial");
 	ASSERT(mMaterialHandle != 0, "mMaterialHandle == NULL");
 	
+	
 	// texture
 	//mTextureHandle = mWindow->getRenderDevice()->getCurrentEffect()->GetParameterByName(0, "gColorMapTexture");
 	//ASSERT(mTextureHandle != 0, "mTextureHandle == NULL");
@@ -330,4 +336,19 @@ void TestApp::setShaderData() {
 
 	// Bind the textures to the shader.
 	//mWindow->getRenderDevice()->getCurrentEffect()->SetTexture(mTextureHandle, mWhiteTexture);
+}
+
+void TestApp::changeDeviceInfo() {
+	D3DPRESENT_PARAMETERS newDevInfo;
+	const D3DPRESENT_PARAMETERS currentDevInfo = mWindow->getRenderDevice()->getDeviceInfo();
+
+	memcpy(&newDevInfo, &currentDevInfo, sizeof(D3DPRESENT_PARAMETERS));
+	newDevInfo.Flags = 0;
+	VertexDeclarations::releaseVertexDeclarations();
+	//mWindow->getRenderDevice()->getCurrentEffect()->Release();
+	mWindow->getRenderDevice()->resetDevice(&newDevInfo);
+
+	VertexDeclarations::initVertexDeclarations(D3DDEVICE);
+	mWindow->getRenderDevice()->setVertexDeclaration(CustomVertex3NormalUV::decl);
+
 }

@@ -80,6 +80,14 @@ void VertexDeclarations::releaseVertexDeclarations() {
 
 	CustomVertex3Color::decl->Release();
 	CustomVertex3UV::decl->Release();
-
 	CustomVertexTransformedColor::decl->Release();
+
+	CustomVertex3Normal::decl = 0;
+	CustomVertex3NormalUV::decl = 0;
+	CustomVertex3NormalUVTangent::decl = 0;
+	CustomVertex3NormalUVTangentBinormal::decl = 0;
+
+	CustomVertex3Color::decl = 0;
+	CustomVertex3UV::decl = 0;
+	CustomVertexTransformedColor::decl = 0;
 }

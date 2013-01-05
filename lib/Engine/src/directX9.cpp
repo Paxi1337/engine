@@ -22,29 +22,29 @@ void DirectX9::createDevice(HWND window) {
 	mD3D = Direct3DCreate9(D3D_SDK_VERSION);
 
 	// struct that holds informations provided to the video card
-	D3DPRESENT_PARAMETERS dev_info;
-
-	memset(&dev_info,'\0', sizeof(dev_info));
 	
-	dev_info.BackBufferCount = 1; // 1 back buffer (double buffering)
-	dev_info.SwapEffect = D3DSWAPEFFECT_DISCARD; // discard previous frame
-	dev_info.MultiSampleType = D3DMULTISAMPLE_8_SAMPLES;
-	dev_info.MultiSampleQuality = 2; 
-	dev_info.hDeviceWindow = window;
-	dev_info.Flags = 0;
-	dev_info.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
-	dev_info.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
-	dev_info.EnableAutoDepthStencil = true; // z-buffer
-	dev_info.AutoDepthStencilFormat = D3DFMT_D24S8;
-	dev_info.BackBufferFormat = D3DFMT_UNKNOWN;
+
+	memset(&mDevInfo,'\0', sizeof(mDevInfo));
+	
+	mDevInfo.BackBufferCount = 1; // 1 back buffer (double buffering)
+	mDevInfo.SwapEffect = D3DSWAPEFFECT_DISCARD; // discard previous frame
+	mDevInfo.MultiSampleType = D3DMULTISAMPLE_8_SAMPLES;
+	mDevInfo.MultiSampleQuality = 2; 
+	mDevInfo.hDeviceWindow = window;
+	mDevInfo.Flags = 0;
+	mDevInfo.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
+	mDevInfo.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+	mDevInfo.EnableAutoDepthStencil = true; // z-buffer
+	mDevInfo.AutoDepthStencilFormat = D3DFMT_D24S8;
+	mDevInfo.BackBufferFormat = D3DFMT_UNKNOWN;
 #ifndef FULLSCREEN
-	dev_info.Windowed = true;
-	dev_info.BackBufferHeight = 0;
-	dev_info.BackBufferWidth = 0;
+	mDevInfo.Windowed = true;
+	mDevInfo.BackBufferHeight = 0;
+	mDevInfo.BackBufferWidth = 0;
 #else
-	dev_info.Windowed = false;
-	dev_info.BackBufferWidth = WINDOW_WIDTH;
-	dev_info.BackBufferHeight = WINDOW_HEIGHT;
+	mDevInfo.Windowed = false;
+	mDevInfo.BackBufferWidth = WINDOW_WIDTH;
+	mDevInfo.BackBufferHeight = WINDOW_HEIGHT;
 #endif
 
 	HRESULT result;
@@ -52,8 +52,8 @@ void DirectX9::createDevice(HWND window) {
 	result = mD3D->CreateDevice(D3DADAPTER_DEFAULT,
 							   D3DDEVTYPE_HAL,
 							   window,
-							   D3DCREATE_SOFTWARE_VERTEXPROCESSING,
-							   &dev_info,
+							   D3DCREATE_HARDWARE_VERTEXPROCESSING,
+							   &mDevInfo,
 							   &mDevice);
 
 	// init all vertex declarations
@@ -64,10 +64,6 @@ void DirectX9::createDevice(HWND window) {
 void DirectX9::onCreateDevice() {
 	if(mRunningApp)
 		mRunningApp->onCreateDevice();
-}
-
-LPDIRECT3DDEVICE9 DirectX9::getD3D9Device() const {
-	return mDevice;
 }
 
 void DirectX9::release() {
@@ -243,3 +239,13 @@ void DirectX9::loadEffectFromFile(const char* effectFileName) {
 		__debugbreak();
 	}
 }
+
+void DirectX9::resetDevice(D3DPRESENT_PARAMETERS* newDevInfo) {
+	HR(mDevice->Reset(newDevInfo));
+	
+	if(mRunningApp) {
+		mRunningApp->onResetDevice();
+	}
+
+}
+

@@ -32,12 +32,15 @@ public:
 	// TODO toggleFullscreen();
 
 	// get pointer to IDirect3DDevice interface
-	LPDIRECT3DDEVICE9 getD3D9Device() const;
+	inline LPDIRECT3DDEVICE9 getD3D9Device() const { return mDevice; }
+	inline const D3DPRESENT_PARAMETERS& getDeviceInfo() const { return mDevInfo; }
 
 	// vertex buffer functions
 	VertexbufferInfo* createVertexBuffer(const DWORD numberOfVertices, const DWORD FVF, std::string tag);
 	// the customVertex FVF has to be exactly as defined in the associated buffer 
 	void setVertexBufferData(std::string tag, void* customVertices);
+
+	void resetDevice(D3DPRESENT_PARAMETERS*);
 	
 	// this function returns the raw video memory pointer given by
 	// buffer->Lock(0, 0, (void**)&pVoid, 0); return pVoid;
@@ -57,7 +60,7 @@ public:
 
 	// TODO: shader class
 	void loadEffectFromFile(const char* effectFileName);
-	inline const LPD3DXEFFECT getCurrentEffect() const { return mCurrentEffect; }
+	inline LPD3DXEFFECT getCurrentEffect() const { return mCurrentEffect; }
 
 	inline void setVertexDeclaration(IDirect3DVertexDeclaration9* decl) { VertexDeclarations::activateVertexDeclaration(mDevice, decl); }
 
@@ -91,6 +94,8 @@ private:
 	int m_windowHeight;
 	
 	LPD3DXEFFECT mCurrentEffect;
+
+	D3DPRESENT_PARAMETERS mDevInfo;
 };
 
 #endif

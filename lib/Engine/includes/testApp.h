@@ -28,6 +28,8 @@ public:
 	void setShaderData();
 	void initShaderHandles();
 
+	void changeDeviceInfo();
+
 private:
 	Window* mWindow;
 
