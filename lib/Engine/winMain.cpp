@@ -1,4 +1,4 @@
-#include "includes/testApp.h"
+#include "includes/smApp.h"
 #include "includes/engine.h"
 
 // TODO:

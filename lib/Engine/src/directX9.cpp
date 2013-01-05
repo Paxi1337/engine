@@ -28,8 +28,8 @@ void DirectX9::createDevice(HWND window) {
 	
 	mDevInfo.BackBufferCount = 1; // 1 back buffer (double buffering)
 	mDevInfo.SwapEffect = D3DSWAPEFFECT_DISCARD; // discard previous frame
-	mDevInfo.MultiSampleType = D3DMULTISAMPLE_8_SAMPLES;
-	mDevInfo.MultiSampleQuality = 2; 
+	mDevInfo.MultiSampleType = D3DMULTISAMPLE_NONE;
+	mDevInfo.MultiSampleQuality = 0; 
 	mDevInfo.hDeviceWindow = window;
 	mDevInfo.Flags = 0;
 	mDevInfo.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
@@ -58,7 +58,21 @@ void DirectX9::createDevice(HWND window) {
 
 	// init all vertex declarations
 	VertexDeclarations::initVertexDeclarations(mDevice);
-	
+
+
+	// see http://www.nvidia.com/object/coverage-sampled-aa.html
+	DWORD none[2] = {D3DMULTISAMPLE_NONE , 0};
+	DWORD csaa8x[2] = {D3DMULTISAMPLE_4_SAMPLES , 2};
+	DWORD csaa8xQ[2] = {D3DMULTISAMPLE_8_SAMPLES , 0};
+	DWORD csaa16x[2] = {D3DMULTISAMPLE_4_SAMPLES , 4};
+	DWORD csaa16xQ[2] = {D3DMULTISAMPLE_8_SAMPLES , 2};
+
+	// supported MSAA modes are not checked so far (currenlty assuming the App runs under GTX680 & GTX650M)
+	mSupportedMSAAModes.insert(std::pair<std::string, DWORD*>("NONE", none));
+	mSupportedMSAAModes.insert(std::pair<std::string, DWORD*>("CSAA8x", csaa8x));
+	mSupportedMSAAModes.insert(std::pair<std::string, DWORD*>("CSAA8xQ", csaa8xQ));
+	mSupportedMSAAModes.insert(std::pair<std::string, DWORD*>("CSAA16x", csaa16x));
+	mSupportedMSAAModes.insert(std::pair<std::string, DWORD*>("CSAA16xQ", csaa16xQ));
 }
 
 void DirectX9::onCreateDevice() {
@@ -67,6 +81,9 @@ void DirectX9::onCreateDevice() {
 }
 
 void DirectX9::release() {
+
+
+	mRunningApp->onReleaseDevice();
 
 	std::map<std::string,VertexbufferInfo*>::iterator iter;
 	iter = m_vertexBuffers.begin();
@@ -82,10 +99,7 @@ void DirectX9::release() {
 
 	mDevice->Release();
 	mD3D->Release();
-
-	mRunningApp->onReleaseDevice();
 }
-
 
 int DirectX9::calcPrimitiveCount(D3DPRIMITIVETYPE primitiveType, const DWORD numberOfVertices) {
 	switch(primitiveType) {

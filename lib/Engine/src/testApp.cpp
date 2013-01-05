@@ -117,8 +117,8 @@ void TestApp::onCreateDevice() {
 	initLight();
 
 	// create and init cube
-	//mBuffer = mWindow->getRenderDevice()->createVertexBuffer(36, CUSTOMVERTEX3NORMALUV, std::string("cube"));
-	//mWindow->getRenderDevice()->setVertexBufferData(std::string("cube"), verticesCube);
+	mBuffer = mWindow->getRenderDevice()->createVertexBuffer(36, CUSTOMVERTEX3NORMALUV, std::string("cube"));
+	mWindow->getRenderDevice()->setVertexBufferData(std::string("cube"), verticesCube);
 
 	//mSpider = mWindow->getRenderDevice()->createVertexBuffer(numVerticesSpider, CUSTOMVERTEX3NORMALUV, std::string("spider"));
 	//mWindow->getRenderDevice()->setVertexBufferData(std::string("spider"), spider);
@@ -152,7 +152,7 @@ void TestApp::onRender() {
 		mWindow->getRenderDevice()->getCurrentEffect()->Begin(NULL,NULL);
 		mWindow->getRenderDevice()->getCurrentEffect()->BeginPass(0);
 		
-		//mWindow->getRenderDevice()->renderVertexbuffer(D3DPT_TRIANGLELIST, std::string("cube"));
+		mWindow->getRenderDevice()->renderVertexbuffer(D3DPT_TRIANGLELIST, std::string("cube"));
 
 		mWindow->getRenderDevice()->getCurrentEffect()->EndPass();
 		mWindow->getRenderDevice()->getCurrentEffect()->End();
@@ -339,16 +339,17 @@ void TestApp::setShaderData() {
 }
 
 void TestApp::changeDeviceInfo() {
-	D3DPRESENT_PARAMETERS newDevInfo;
-	const D3DPRESENT_PARAMETERS currentDevInfo = mWindow->getRenderDevice()->getDeviceInfo();
+	//D3DPRESENT_PARAMETERS newDevInfo;
+	D3DPRESENT_PARAMETERS* currentDevInfo = mWindow->getRenderDevice()->getDeviceInfo();
 
-	memcpy(&newDevInfo, &currentDevInfo, sizeof(D3DPRESENT_PARAMETERS));
-	newDevInfo.Flags = 0;
+	//memcpy(&newDevInfo, currentDevInfo, sizeof(D3DPRESENT_PARAMETERS));
+	//newDevInfo.Flags = 0;
 	VertexDeclarations::releaseVertexDeclarations();
-	//mWindow->getRenderDevice()->getCurrentEffect()->Release();
-	mWindow->getRenderDevice()->resetDevice(&newDevInfo);
-
+	mWindow->getRenderDevice()->getCurrentEffect()->Release();
+	mWindow->getRenderDevice()->resetDevice(currentDevInfo);
 	VertexDeclarations::initVertexDeclarations(D3DDEVICE);
 	mWindow->getRenderDevice()->setVertexDeclaration(CustomVertex3NormalUV::decl);
+	mWindow->getRenderDevice()->loadEffectFromFile("./shader/basic.fx");
+	initShaderHandles();
 
 }

@@ -33,7 +33,8 @@ public:
 
 	// get pointer to IDirect3DDevice interface
 	inline LPDIRECT3DDEVICE9 getD3D9Device() const { return mDevice; }
-	inline const D3DPRESENT_PARAMETERS& getDeviceInfo() const { return mDevInfo; }
+	inline D3DPRESENT_PARAMETERS* getDeviceInfo() const { return const_cast<D3DPRESENT_PARAMETERS*>(&mDevInfo); }
+	inline const std::map<std::string, DWORD*>& getMSAAModes() const { return mSupportedMSAAModes; }
 
 	// vertex buffer functions
 	VertexbufferInfo* createVertexBuffer(const DWORD numberOfVertices, const DWORD FVF, std::string tag);
@@ -86,6 +87,7 @@ private:
 	LPDIRECT3D9 mD3D;
 
 	std::map<std::string,VertexbufferInfo*> m_vertexBuffers;
+	std::map<std::string, DWORD*> mSupportedMSAAModes;
 	
 	App* mRunningApp;
 	//Camera* m_camera;

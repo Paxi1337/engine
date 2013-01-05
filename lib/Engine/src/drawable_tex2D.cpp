@@ -18,7 +18,9 @@ DrawableTexture2D::DrawableTexture2D(LPDIRECT3DDEVICE9 device, UINT width, UINT 
 }
 
 DrawableTexture2D::~DrawableTexture2D() {
-	
+	mRTS->Release();
+	mTopSurf->Release();
+	mTex->Release();
 }
 
 LPDIRECT3DTEXTURE9 DrawableTexture2D::d3dTex() {

@@ -3,7 +3,7 @@
 
 #include <DxErr.h>
 
-	#if defined(DEBUG) | defined(_DEBUG)
+	//#if defined(DEBUG) | defined(_DEBUG)
 	#ifndef HR
 	#define HR(x)											\
 			{													\
@@ -17,7 +17,7 @@
 
 	#define SAFERELEASECOM(x) { if(x){ x->Release();x = 0; } }
 
-#endif
+//#endif
 
 
 #endif
