@@ -90,6 +90,8 @@ private:
 	ID3DXMesh* mSceneMesh;
 	std::vector<Material> mSceneMaterials;
 	std::vector<IDirect3DTexture9*> mSceneTextures;
+
+	std::vector<std::pair<std::string, DWORD*>>::const_iterator mMSAAModeIterator;
 };
 
 #endif

@@ -81,6 +81,7 @@ TestApp::TestApp(Window* window) : mWindow(window),
 								   mLightCamera(new FreeCamera(D3DXVECTOR3(100.0f, 30.0f, 0.0f))),
 								   mWireframeMode(false)
 {
+	mMSAAModeIterator = mWindow->getRenderDevice()->getMSAAModes().begin();
 }
 
 TestApp::~TestApp() {
@@ -154,6 +155,7 @@ void TestApp::onCreateDevice() {
 	
 	//mLightCamera->pitch(D3DXToRadian(90.0f));
 	D3DXCreateSphere(D3DDEVICE, 5.0f, 10, 10, &teapot, NULL);
+
 }
 
 void TestApp::onResetDevice() {
@@ -430,23 +432,20 @@ void TestApp::createShadowMap() {
 
 void TestApp::changeDeviceInfo() {
 	D3DPRESENT_PARAMETERS* currentDevInfo = mWindow->getRenderDevice()->getDeviceInfo();
-
-	//DWORD currentMSAAType = currentDevInfo->MultiSampleType;
-	//DWORD currentMSAAQuality = currentDevInfo->MultiSampleQuality; 
-
-	std::map<std::string, DWORD*>::const_iterator it = mWindow->getRenderDevice()->getMSAAModes().find("CSAA8x");
-
-	DWORD* val = it->second;
-
-	if(currentDevInfo->MultiSampleType == D3DMULTISAMPLE_NONE && currentDevInfo->MultiSampleQuality == 0) {
-		currentDevInfo->MultiSampleType = static_cast<D3DMULTISAMPLE_TYPE>(val[0]);
-		currentDevInfo->MultiSampleQuality = val[1];
+	
+	if(mMSAAModeIterator == mWindow->getRenderDevice()->getMSAAModes().end() - 1) {
+		mMSAAModeIterator = mWindow->getRenderDevice()->getMSAAModes().begin();
 	}
 	else {
-		currentDevInfo->MultiSampleType = D3DMULTISAMPLE_NONE;
-		currentDevInfo->MultiSampleQuality = 0;
+		++mMSAAModeIterator;
 	}
 
+	DWORD* val = mMSAAModeIterator->second;
+
+	currentDevInfo->MultiSampleType = static_cast<D3DMULTISAMPLE_TYPE>(val[0]);
+	currentDevInfo->MultiSampleQuality = val[1];
+	
+	// release all ressources otherwise the device reset call with break with INVALIDCALL error
 	mWindow->getRenderDevice()->getCurrentEffect()->Release();
 	mWhiteTexture->Release();
 	mNormalTextureBricks->Release();
@@ -455,5 +454,4 @@ void TestApp::changeDeviceInfo() {
 	delete mShadowMap;
 
 	mWindow->getRenderDevice()->resetDevice(currentDevInfo);
-
 }

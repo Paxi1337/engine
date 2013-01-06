@@ -74,19 +74,19 @@ void DirectX9::createDevice(HWND window) {
 	csaa8xQ[1] = 0;
 
 	DWORD* csaa16x = new DWORD[2];
-	csaa8x[0] = D3DMULTISAMPLE_4_SAMPLES;
-	csaa8x[1] = 4;
+	csaa16x[0] = D3DMULTISAMPLE_4_SAMPLES;
+	csaa16x[1] = 4;
 
 	DWORD* csaa16xQ = new DWORD[2];
-	csaa8x[0] = D3DMULTISAMPLE_8_SAMPLES;
-	csaa8x[1] = 2;
+	csaa16xQ[0] = D3DMULTISAMPLE_8_SAMPLES;
+	csaa16xQ[1] = 2;
 
 	// supported MSAA modes are not checked so far (currenlty assuming the App runs under GTX680 & GTX650M)
-	mSupportedMSAAModes.insert(std::pair<std::string, DWORD*>("NONE", none));
-	mSupportedMSAAModes.insert(std::pair<std::string, DWORD*>("CSAA8x", csaa8x));
-	mSupportedMSAAModes.insert(std::pair<std::string, DWORD*>("CSAA8xQ", csaa8xQ));
-	mSupportedMSAAModes.insert(std::pair<std::string, DWORD*>("CSAA16x", csaa16x));
-	mSupportedMSAAModes.insert(std::pair<std::string, DWORD*>("CSAA16xQ", csaa16xQ));
+	mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("NONE", none));
+	mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("CSAA8x", csaa8x));
+	mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("CSAA8xQ", csaa8xQ));
+	mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("CSAA16x", csaa16x));
+	mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("CSAA16xQ", csaa16xQ));
 }
 
 void DirectX9::onCreateDevice() {
@@ -114,10 +114,10 @@ void DirectX9::release() {
 	mDevice->Release();
 	mD3D->Release();
 
-	std::map<std::string,DWORD*>::iterator it;
+	std::vector<std::pair<std::string,DWORD*>>::iterator it;
 	it = mSupportedMSAAModes.begin();
 	while(it != mSupportedMSAAModes.end()) {
-		delete(iter->second);
+		delete(it->second);
 		++iter;
 	}
 	mSupportedMSAAModes.clear();
