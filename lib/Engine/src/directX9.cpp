@@ -118,7 +118,7 @@ void DirectX9::release() {
 	it = mSupportedMSAAModes.begin();
 	while(it != mSupportedMSAAModes.end()) {
 		delete(it->second);
-		++iter;
+		++it;
 	}
 	mSupportedMSAAModes.clear();
 }

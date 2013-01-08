@@ -1,6 +1,7 @@
 #include "../includes/smApp.h" 
 #include "../includes/freeCamera.h"
 #include "../includes/xManager.h"
+#include "../includes/structdeclarations.h"
 
 #include <vector>
 #include <algorithm>
@@ -14,72 +15,14 @@ const float kCameraMovementSpeed=0.4f;
 const float kCameraRotationSpeed=0.01f;
 const float lightRotationSpeed=0.1f;
 
-ID3DXMesh* teapot;
-
-CustomVertex3NormalUVTangent verticesCube[] = {
-	// -Z face
-	{ D3DXVECTOR3(-1.0f,  1.0f, -1.0f),       D3DXVECTOR3(0.0f, 0.0f, -1.0f), 0.0f, 0.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(1.0f,  1.0f, -1.0f),       D3DXVECTOR3(0.0f, 0.0f, -1.0f), 1.0f, 0.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(1.0f, -1.0f, -1.0f),       D3DXVECTOR3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(1.0f, -1.0f, -1.0f),      D3DXVECTOR3(0.0f, 0.0f, -1.0f),  1.0f, 1.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(-1.0f, -1.0f, -1.0f),       D3DXVECTOR3(0.0f, 0.0f, -1.0f), 0.0f, 1.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(-1.0f,  1.0f, -1.0f),       D3DXVECTOR3(0.0f, 0.0f, -1.0f), 0.0f, 0.0f , D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f)},
-
-	// +Z face
-	{ D3DXVECTOR3(1.0f,  1.0f,  1.0f),     D3DXVECTOR3(0.0f, 0.0f, 1.0f),  0.0f, 0.0f , D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f)},
-	{ D3DXVECTOR3(-1.0f,  1.0f,  1.0f),     D3DXVECTOR3(0.0f, 0.0f, 1.0f), 1.0f, 0.0f , D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f)},
-	{ D3DXVECTOR3(-1.0f, -1.0f,  1.0f),     D3DXVECTOR3(0.0f, 0.0f, 1.0f),  1.0f, 1.0f , D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f)},
-	{ D3DXVECTOR3(-1.0f, -1.0f,  1.0f),      D3DXVECTOR3(0.0f, 0.0f, 1.0f), 1.0f, 1.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(1.0f, -1.0f,  1.0f),     D3DXVECTOR3(0.0f, 0.0f, 1.0f), 0.0f, 1.0f , D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f)},
-	{ D3DXVECTOR3(1.0f,  1.0f,  1.0f),    D3DXVECTOR3(0.0f, 0.0f, 1.0f),  0.0f, 0.0f , D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f)},
-
-	// -Y face
-	{ D3DXVECTOR3(-1.0f, -1.0f, -1.0f),     D3DXVECTOR3(0.0f, -1.0f, 0.0f), 0.0f, 0.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(1.0f, -1.0f, -1.0f),    D3DXVECTOR3(0.0f, -1.0f, 0.0f),  1.0f, 0.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(1.0f, -1.0f,  1.0f),      D3DXVECTOR3(0.0f, -1.0f, 0.0f), 1.0f, 1.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(1.0f, -1.0f,  1.0f),    D3DXVECTOR3(0.0f, -1.0f, 0.0f),  1.0f, 1.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(-1.0f, -1.0f,  1.0f),     D3DXVECTOR3(0.0f, -1.0f, 0.0f), 0.0f, 1.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(-1.0f, -1.0f, -1.0f),    D3DXVECTOR3(0.0f, -1.0f, 0.0f),  0.0f, 0.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-
-	// +Y face
-	{ D3DXVECTOR3(-1.0f,  1.0f,  1.0f),      D3DXVECTOR3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(1.0f,  1.0f,  1.0f),     D3DXVECTOR3(0.0f, 1.0f, 0.0f), 1.0f, 0.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(1.0f,  1.0f, -1.0f),      D3DXVECTOR3(0.0f, 1.0f, 0.0f), 1.0f, 1.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(1.0f,  1.0f, -1.0f),      D3DXVECTOR3(0.0f, 1.0f, 0.0f), 1.0f, 1.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(-1.0f,  1.0f, -1.0f),     D3DXVECTOR3(0.0f, 1.0f, 0.0f), 0.0f, 1.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(-1.0f,  1.0f,  1.0f),      D3DXVECTOR3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-
-	// -X face
-	{ D3DXVECTOR3(-1.0f,  1.0f,  1.0f),      D3DXVECTOR3(-1.0f, 0.0f, 0.0f), 0.0f, 0.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(-1.0f,  1.0f, -1.0f),      D3DXVECTOR3(-1.0f, 0.0f, 0.0f), 1.0f, 0.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(-1.0f, -1.0f, -1.0f),      D3DXVECTOR3(-1.0f, 0.0f, 0.0f), 1.0f, 1.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(-1.0f, -1.0f, -1.0f),      D3DXVECTOR3(-1.0f, 0.0f, 0.0f), 1.0f, 1.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(-1.0f, -1.0f,  1.0f),     D3DXVECTOR3(-1.0f, 0.0f, 0.0f),  0.0f, 1.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(-1.0f,  1.0f,  1.0f),      D3DXVECTOR3(-1.0f, 0.0f, 0.0f), 0.0f, 0.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-
-	// +X face
-	{ D3DXVECTOR3(1.0f,  1.0f, -1.0f),      D3DXVECTOR3(1.0f, 0.0f, 0.0f), 0.0f, 0.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(1.0f,  1.0f,  1.0f),      D3DXVECTOR3(1.0f, 0.0f, 0.0f), 1.0f, 0.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(1.0f, -1.0f,  1.0f),      D3DXVECTOR3(1.0f, 0.0f, 0.0f), 1.0f, 1.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(1.0f, -1.0f,  1.0f),      D3DXVECTOR3(1.0f, 0.0f, 0.0f), 1.0f, 1.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(1.0f, -1.0f, -1.0f),     D3DXVECTOR3(1.0f, 0.0f, 0.0f),  0.0f, 1.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(1.0f,  1.0f, -1.0f),      D3DXVECTOR3(1.0f, 0.0f, 0.0f), 0.0f, 0.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) }
-};
-
-CustomVertex3NormalUVTangent verticesGround[] = {
-	{ D3DXVECTOR3(-50.0f, -5.0f, 50.0f), D3DXVECTOR3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(50.0f, -5.0f, 50.0f), D3DXVECTOR3(0.0f, 1.0f, 0.0f), 1.0f, 0.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(-50.0f, -5.0f, -50.0f), D3DXVECTOR3(0.0f, 1.0f, 0.0f), 0.0f, 1.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) },
-	{ D3DXVECTOR3(50.0f, -5.0f, -50.0f), D3DXVECTOR3(0.0f, 1.0f, 0.0f), 1.0f, 1.0f, D3DXVECTOR4(0.0f, 0.0f, 0.0f, 0.0f) }
-};
-
 TestApp::TestApp(Window* window) : mWindow(window), 
 								   mCube(NULL),
 								   mGround(NULL),
 								   mTimeSinceElapsedTimeReset(0.0f), 
 								   mSceneCamera(new FreeCamera(D3DXVECTOR3(0.0f, 5.0f, -50.0f))),
 								   mLightCamera(new FreeCamera(D3DXVECTOR3(100.0f, 30.0f, 0.0f))),
-								   mWireframeMode(false)
+								   mWireframeMode(false),
+								   mSceneEntity(0)
 {
 	mMSAAModeIterator = mWindow->getRenderDevice()->getMSAAModes().begin();
 }
@@ -88,6 +31,12 @@ TestApp::~TestApp() {
 	SAVEDELETE(mShadowMap);
 	SAVEDELETE(mSceneCamera);
 	SAVEDELETE(mLightCamera);
+	
+	mWhiteTexture->Release();
+	mNormalTextureBricks->Release();
+	mNormalTextureFloor->Release();
+	
+	delete mSceneEntity;
 }
 
 void TestApp::onCreateDevice() {
@@ -104,9 +53,12 @@ void TestApp::onCreateDevice() {
 	HR(D3DXCreateTextureFromFileA(D3DDEVICE, "./texture/floor_nmap.bmp", &mNormalTextureFloor));
 
 	ID3DXMesh* tempMesh = 0;
+	ID3DXMesh* sceneMesh = 0;
+	std::vector<Material>* sceneMaterials = new std::vector<Material>();
+	std::vector<IDirect3DTexture9*>* sceneTextures = new std::vector<IDirect3DTexture9*>();
 
 	// load scene Mesh
-	XManager::loadXFile(D3DDEVICE, "./model/testscene/BasicColumnScene.x", &tempMesh, mSceneMaterials, mSceneTextures);
+	XManager::loadXFile(D3DDEVICE, "./model/testscene/BasicColumnScene.x", &tempMesh, sceneMaterials, sceneTextures);
 
 	// Get the vertex declaration for the NMapVertex.
 	D3DVERTEXELEMENT9 elems[MAX_FVF_DECL_SIZE];
@@ -129,14 +81,16 @@ void TestApp::onCreateDevice() {
       0, // Options
       0, // Adjacency
 	  0.01f, 0.25f, 0.01f, // Thresholds for handling errors
-	  &mSceneMesh, // Output mesh
+	  &sceneMesh, // Output mesh
 	  0));         // Vertex Remapping
 
 
 	tempMesh->Release();
 	clonedTempMesh->Release();
+
+	mSceneEntity = new Entity(1, sceneMesh, sceneMaterials, sceneTextures); 
 	
-	UINT16* indices;
+	/*UINT16* indices;
 	CustomVertex3NormalUVTangentBinormal* vertices;
 
 	mSceneMesh->LockIndexBuffer(D3DLOCK_READONLY, reinterpret_cast<void**>(&indices));
@@ -151,7 +105,7 @@ void TestApp::onCreateDevice() {
 	}
 	
 	mSceneMesh->UnlockIndexBuffer();
-	mSceneMesh->UnlockVertexBuffer();
+	mSceneMesh->UnlockVertexBuffer();*/
 
 
 	// init light
@@ -160,21 +114,9 @@ void TestApp::onCreateDevice() {
 	D3DVIEWPORT9 vp = {0, 0, 1024, 1024, 0.0f, 1.0f};
 	mShadowMap = new DrawableTexture2D(D3DDEVICE, 1024, 1024, 1, D3DFMT_R32F, true, D3DFMT_D24X8, vp, false);
 
-	// create and init cube
-	//mCube = mWindow->getRenderDevice()->createVertexBuffer(36, CUSTOMVERTEX3NORMALUVTANGENT, std::string("cube"));
-	//mWindow->getRenderDevice()->setVertexBufferData(std::string("cube"), verticesCube);
-
-	// create and init ground
-	//mGround = mWindow->getRenderDevice()->createVertexBuffer(4, CUSTOMVERTEX3NORMALUVTANGENT, std::string("ground"));
-	//mWindow->getRenderDevice()->setVertexBufferData(std::string("ground"), verticesGround);
-
 	// init shader handles
 	initShaderHandles();
 	
-	//mLightCamera->pitch(D3DXToRadian(90.0f));
-	D3DXCreateSphere(D3DDEVICE, 5.0f, 10, 10, &teapot, NULL);
-
-
 }
 
 void TestApp::onResetDevice() {
@@ -198,15 +140,13 @@ void TestApp::onRender() {
 		mWindow->getRenderDevice()->getCurrentEffect()->Begin(NULL,NULL);
 		mWindow->getRenderDevice()->getCurrentEffect()->BeginPass(0);
 		
-		//mWindow->getRenderDevice()->renderVertexbuffer(D3DPT_TRIANGLELIST, std::string("cube"));
-		//mWindow->getRenderDevice()->renderVertexbuffer(D3DPT_TRIANGLESTRIP, std::string("ground"));
 
-		for(UINT i = 0; i < mSceneMaterials.size(); ++i) {
-			HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mMaterialHandle, &mSceneMaterials.at(i), sizeof(Material)));
-			//HR(mWindow->getRenderDevice()->getCurrentEffect()->SetTexture(mTextureHandle, mSceneTextures.at(i)));
+		for(UINT i = 0; i < mSceneEntity->mMtrls->size(); ++i) {
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mMaterialHandle, &mSceneEntity->mMtrls->at(i), sizeof(Material)));
+			//HR(mWindow->getRenderDevice()->getCurrentEffect()->SetTexture(mTextureHandle, mSceneEntity->mTexs->at(i)));
 			HR(mWindow->getRenderDevice()->getCurrentEffect()->CommitChanges());
 
-			mSceneMesh->DrawSubset(i);
+			mSceneEntity->mMesh->DrawSubset(i);
 		}
 		
 
@@ -321,7 +261,7 @@ void TestApp::initLight() {
 void TestApp::onCustomUserFunction() {
 	D3DXMatrixIdentity(&mWorld);
 	mLightCamera->calculateViewMatrix(mViewLight);
-
+	
 	D3DXVECTOR3 lookAt(0.0f,0.0f,0.0f);
 	D3DXVECTOR3 up(0.0f,1.0f,0.0f);
 
@@ -359,7 +299,7 @@ void TestApp::initShaderHandles() {
 
 	mViewProjectionHandle = mWindow->getRenderDevice()->getCurrentEffect()->GetParameterByName(0, "gVP");
 	ASSERT(mViewProjectionHandle != 0, "projMatrix == NULL");
-
+	
 	// initializing shader handle to camera pos
 	mCameraPosHandle = mWindow->getRenderDevice()->getCurrentEffect()->GetParameterByName(0, "gEyePosW");
 	ASSERT(mCameraPosHandle != 0, "mCameraPosHandle == NULL");
@@ -436,15 +376,9 @@ void TestApp::createShadowMap() {
 	UINT passCount = 0;
 	mWindow->getRenderDevice()->getCurrentEffect()->Begin(&passCount,NULL);
 	mWindow->getRenderDevice()->getCurrentEffect()->BeginPass(0);
-	
-	//mWindow->getRenderDevice()->renderVertexbuffer(D3DPT_TRIANGLELIST, std::string("cube"));
-	//mWindow->getRenderDevice()->renderVertexbuffer(D3DPT_TRIANGLESTRIP, std::string("ground"));
 
-	for(UINT i = 0; i < mSceneMaterials.size(); ++i) {
-			//HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mMaterialHandle, &mSceneMaterials.at(i), sizeof(Material)));
-			//HR(mWindow->getRenderDevice()->getCurrentEffect()->SetTexture(mTextureHandle, mSceneTextures.at(i)));
-			//HR(mWindow->getRenderDevice()->getCurrentEffect()->CommitChanges());
-			mSceneMesh->DrawSubset(i);
+	for(UINT i = 0; i < mSceneEntity->mMtrls->size(); ++i) {
+			mSceneEntity->mMesh->DrawSubset(i);
 	}
 
 	mWindow->getRenderDevice()->getCurrentEffect()->EndPass();
@@ -476,8 +410,11 @@ void TestApp::changeDeviceInfo() {
 	mWhiteTexture->Release();
 	mNormalTextureBricks->Release();
 	mNormalTextureFloor->Release();
-	mSceneMesh->Release();
+	
+	delete mSceneEntity;
+	mSceneEntity = 0;
 	delete mShadowMap;
+	mShadowMap = 0;
 
 	mWindow->getRenderDevice()->resetDevice(currentDevInfo);
 }

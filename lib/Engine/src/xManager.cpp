@@ -7,7 +7,7 @@ XManager::XManager() {
 XManager::~XManager() {
 }
 
-void XManager::loadXFile(IDirect3DDevice9* dev, const std::string& filename, ID3DXMesh** meshOut, std::vector<Material>& mtrls, std::vector<IDirect3DTexture9*>& texs) {
+void XManager::loadXFile(IDirect3DDevice9* dev, const std::string& filename, ID3DXMesh** meshOut, std::vector<Material>* mtrls, std::vector<IDirect3DTexture9*>* texs) {
 	// Step 1: Load the .x file from file into a system memory mesh.
 
 	ID3DXMesh* meshSys      = 0;
@@ -84,7 +84,7 @@ void XManager::loadXFile(IDirect3DDevice9* dev, const std::string& filename, ID3
 			m.diffuse   = d3dxmtrls[i].MatD3D.Diffuse;
 			m.spec      = d3dxmtrls[i].MatD3D.Specular;
 			m.specPower = d3dxmtrls[i].MatD3D.Power;
-			mtrls.push_back( m );
+			mtrls->push_back( m );
 
 			// Check if the ith material has an associative texture
 			if( d3dxmtrls[i].pTextureFilename != 0 )
@@ -95,12 +95,12 @@ void XManager::loadXFile(IDirect3DDevice9* dev, const std::string& filename, ID3
 				HR(D3DXCreateTextureFromFile(dev, texFN, &tex));
 
 				// Save the loaded texture
-				texs.push_back( tex );
+				texs->push_back( tex );
 			}
 			else
 			{
 				// No texture for the ith subset
-				texs.push_back( 0 );
+				texs->push_back( 0 );
 			}
 		}
 	}

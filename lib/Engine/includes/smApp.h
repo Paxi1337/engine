@@ -8,6 +8,8 @@
 
 #include <vector>
 
+struct Entity;
+
 class TestApp : public App {
 public:
 	explicit TestApp(Window* window);
@@ -87,9 +89,12 @@ private:
 	D3DXMATRIX mViewLight;
 	D3DXMATRIX mProjectionLight;
 
-	ID3DXMesh* mSceneMesh;
+	/*ID3DXMesh* mSceneMesh;
 	std::vector<Material> mSceneMaterials;
 	std::vector<IDirect3DTexture9*> mSceneTextures;
+*/
+
+	Entity* mSceneEntity;
 
 	std::vector<std::pair<std::string, DWORD*>>::const_iterator mMSAAModeIterator;
 };
