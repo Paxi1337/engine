@@ -14,7 +14,7 @@ Window::Window(const HINSTANCE hInstance, int nCmdShow) : m_hInstance(hInstance)
 }
 
 Window::~Window() {
-
+	delete m_renderDevice;
 }
 
 bool Window::initWindowClass(UINT style, LPCSTR className) {
