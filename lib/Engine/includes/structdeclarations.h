@@ -62,34 +62,22 @@ typedef struct Material {
 	float specPower;
 } *PMaterial;
 
+template <class CustomVertex>
+struct CustomTriangle {
 
-
-typedef struct Entity {
-	Entity(unsigned int ID, ID3DXMesh* mesh, std::vector<Material>* mtrls, std::vector<IDirect3DTexture9*>* texs) : mID(ID),
-																													mMesh(mesh),
-																													mMtrls(mtrls),
-																													mTexs(texs)
-																													
+	CustomTriangle() : mP1(0),
+					   mP2(0),
+					   mP3(0) 
 	{}
 
-	~Entity() {
-		mMesh->Release();
+	CustomTriangle(CustomVertex* p1, CustomVertex* p2, CustomVertex* p3) : mP1(p1),
+																		   mP2(p2),
+																		   mP3(p3) 
+	{}
 		
-		for(std::vector<IDirect3DTexture9*>::iterator it = mTexs->begin(); it != mTexs->end(); ++it) {
-			IDirect3DTexture9* mat = *it;
-			mat->Release();
-		}
-		
-		delete mMtrls;
-		delete mTexs;
-	}
-
-	unsigned int mID;
-	ID3DXMesh* mMesh;
-	std::vector<Material>* mMtrls;
-	std::vector<IDirect3DTexture9*>* mTexs;
-
-} *PEntity;
-
+	CustomVertex* mP1;
+	CustomVertex* mP2;
+	CustomVertex* mP3;
+};
 
 #endif

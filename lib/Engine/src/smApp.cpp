@@ -88,26 +88,26 @@ void TestApp::onCreateDevice() {
 	tempMesh->Release();
 	clonedTempMesh->Release();
 
-	mSceneEntity = new Entity(1, sceneMesh, sceneMaterials, sceneTextures); 
+	mSceneEntity = new Entity<CustomVertex3NormalUVTangentBinormal>(1, sceneMesh, sceneMaterials, sceneTextures); 
 	
-	/*UINT16* indices;
-	CustomVertex3NormalUVTangentBinormal* vertices;
+	CustomTriangle<CustomVertex3NormalUVTangentBinormal>* test = mSceneEntity->getTriangles();
 
-	mSceneMesh->LockIndexBuffer(D3DLOCK_READONLY, reinterpret_cast<void**>(&indices));
-	mSceneMesh->LockVertexBuffer(D3DLOCK_READONLY, reinterpret_cast<void**>(&vertices));
-	
-	for(int i = 0; i < mSceneMesh->GetNumFaces(); ++i) {
-		CustomVertex3NormalUVTangentBinormal v1, v2, v3;
+	for(int i = 0; i < mSceneEntity->getTriangleCount(); ++i) {
+		
+			/*test[i].mP1->normal.x = -5.0f;
+			test[i].mP1->normal.y = -5.0f;
+			test[i].mP1->normal.z = -5.0f;
 
-		v1 = vertices[indices[i*3]];
-		v2 = vertices[indices[i*3+1]];
-		v3 = vertices[indices[i*3+2]];
+			test[i].mP2->normal.x = -5.0f;
+			test[i].mP2->normal.y = -5.0f;
+			test[i].mP2->normal.z = -5.0f;
+
+			test[i].mP3->normal.x = -5.0f;
+			test[i].mP3->normal.y = -5.0f;
+			test[i].mP3->normal.z = -5.0f;*/
+		
 	}
 	
-	mSceneMesh->UnlockIndexBuffer();
-	mSceneMesh->UnlockVertexBuffer();*/
-
-
 	// init light
 	initLight();
 	// texture for drawing the shadowmap
