@@ -4,6 +4,9 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 
+
+#include <vector>
+
 const D3DXCOLOR WHITE(1.0f, 1.0f, 1.0f, 1.0f);
 const D3DXCOLOR BLACK(0.0f, 0.0f, 0.0f, 1.0f);
 const D3DXCOLOR RED(1.0f, 0.0f, 0.0f, 1.0f);
@@ -58,5 +61,35 @@ typedef struct Material {
 	D3DXCOLOR spec;
 	float specPower;
 } *PMaterial;
+
+
+
+typedef struct Entity {
+	Entity(unsigned int ID, ID3DXMesh* mesh, std::vector<Material>* mtrls, std::vector<IDirect3DTexture9*>* texs) : mID(ID),
+																													mMesh(mesh),
+																													mMtrls(mtrls),
+																													mTexs(texs)
+																													
+	{}
+
+	~Entity() {
+		mMesh->Release();
+		
+		for(std::vector<IDirect3DTexture9*>::iterator it = mTexs->begin(); it != mTexs->end(); ++it) {
+			IDirect3DTexture9* mat = *it;
+			mat->Release();
+		}
+		
+		delete mMtrls;
+		delete mTexs;
+	}
+
+	unsigned int mID;
+	ID3DXMesh* mMesh;
+	std::vector<Material>* mMtrls;
+	std::vector<IDirect3DTexture9*>* mTexs;
+
+} *PEntity;
+
 
 #endif
