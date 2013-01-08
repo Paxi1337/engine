@@ -59,7 +59,7 @@ bool Window::initMouse() {
 bool Window::createWindowInitDirectX(LPCSTR title, int x, int y, int width, int height) {
 	
 	// passing in this pointer as optional param (lpParam) for using it later to access internal method in static message callback function
-	m_hWindow = CreateWindowExA(NULL, m_className, title, WS_OVERLAPPEDWINDOW, x, y, width, height, NULL, NULL, m_hInstance, this);
+	m_hWindow = CreateWindowExA(NULL, m_className, title, WS_VISIBLE | WS_POPUP, x, y, width, height, NULL, NULL, m_hInstance, this);
 	
 	if(m_hWindow) {
 		ShowWindow(m_hWindow, m_nCmdShow);

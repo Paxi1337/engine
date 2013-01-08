@@ -63,7 +63,7 @@ void FreeCamera::calculateViewMatrix(D3DXMATRIX& viewMatrix) {
 
 void FreeCamera::calculateProjectionMatrix(D3DXMATRIX& projectionMatrix) {
 	float aspect = 4.0f / 3.0f;
-	D3DXMatrixPerspectiveFovLH( &projectionMatrix, D3DX_PI/4, aspect, 1.0f, 100.0f );
+	D3DXMatrixPerspectiveFovLH( &projectionMatrix, D3DX_PI/4, aspect, 1.0f, 200.0f );
 }
 
 void FreeCamera::calculateProjectionMatrixCustom(D3DXMATRIX& projectionMatrix, float fov, float aspect, int nearPlane, int farPlane) {

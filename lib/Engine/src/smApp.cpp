@@ -135,6 +135,24 @@ void TestApp::onCreateDevice() {
 
 	tempMesh->Release();
 	clonedTempMesh->Release();
+	
+	UINT16* indices;
+	CustomVertex3NormalUVTangentBinormal* vertices;
+
+	mSceneMesh->LockIndexBuffer(D3DLOCK_READONLY, reinterpret_cast<void**>(&indices));
+	mSceneMesh->LockVertexBuffer(D3DLOCK_READONLY, reinterpret_cast<void**>(&vertices));
+	
+	for(int i = 0; i < mSceneMesh->GetNumFaces(); ++i) {
+		CustomVertex3NormalUVTangentBinormal v1, v2, v3;
+
+		v1 = vertices[indices[i*3]];
+		v2 = vertices[indices[i*3+1]];
+		v3 = vertices[indices[i*3+2]];
+	}
+	
+	mSceneMesh->UnlockIndexBuffer();
+	mSceneMesh->UnlockVertexBuffer();
+
 
 	// init light
 	initLight();
@@ -155,6 +173,7 @@ void TestApp::onCreateDevice() {
 	
 	//mLightCamera->pitch(D3DXToRadian(90.0f));
 	D3DXCreateSphere(D3DDEVICE, 5.0f, 10, 10, &teapot, NULL);
+
 
 }
 
@@ -254,6 +273,8 @@ void TestApp::onKeyPressed(WPARAM keyCode) {
 
 void TestApp::onRawMouseInputReceived(RAWINPUT const& rawMouseInput) {
 	static BOOL mouseDown;
+	char buffer[25];
+	POINT mousePos;
 
 	if(rawMouseInput.data.mouse.usButtonFlags == RI_MOUSE_LEFT_BUTTON_DOWN)
 		mouseDown = true;
@@ -266,6 +287,11 @@ void TestApp::onRawMouseInputReceived(RAWINPUT const& rawMouseInput) {
 
 		mSceneCamera->pitch(kCameraRotationSpeed*lastY);
 		mSceneCamera->yaw(kCameraRotationSpeed*lastX);
+
+		GetCursorPos(&mousePos);
+
+		sprintf(buffer, "X: %d, Y: %d\n", mousePos.x, mousePos.y);
+		OutputDebugStringA(buffer);
 	}
 }
 
