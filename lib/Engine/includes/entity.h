@@ -66,7 +66,7 @@ CustomTriangle<CustomVertex>* Entity<CustomVertex>::getTriangles() {
 		mMesh->LockVertexBuffer(D3DLOCK_READONLY, reinterpret_cast<void**>(&vertices));
 	
 	
-		for(int i = 0; i < mMesh->GetNumFaces(); ++i) {
+		for(unsigned int i = 0; i < mMesh->GetNumFaces(); ++i) {
 			
 			mTriangles[i].mP1 = &vertices[indices[i*3]];
 			mTriangles[i].mP2 = &vertices[indices[i*3+1]];

@@ -80,4 +80,6 @@ struct CustomTriangle {
 	CustomVertex* mP3;
 };
 
+
+
 #endif

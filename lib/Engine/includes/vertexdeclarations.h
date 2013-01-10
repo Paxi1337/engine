@@ -39,6 +39,7 @@ struct CustomVertex3NormalUVTangent {
 
 #define CUSTOMVERTEX3NORMALUVTANGENTBINORMAL 4
 struct CustomVertex3NormalUVTangentBinormal {
+
 	D3DXVECTOR3 pos;
 	D3DXVECTOR3 normal;
 	FLOAT u,v;

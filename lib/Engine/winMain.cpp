@@ -12,7 +12,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		Window window(hInstance, nCmdShow);
 
 		window.initWindowClass(CS_HREDRAW | CS_VREDRAW, "WindowClass1");
-		window.createWindowInitDirectX("Debug", 300, 300, 800, 640);
+		window.createWindowInitDirectX("EZG Final Project", 300, 300, 800, 640);
 		window.initMouse();
 
 		App* testApp = new TestApp(&window);

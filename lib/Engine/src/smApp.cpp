@@ -2,6 +2,7 @@
 #include "../includes/freeCamera.h"
 #include "../includes/xManager.h"
 #include "../includes/structdeclarations.h"
+#include "../includes/scenemanager.h"
 
 #include <vector>
 #include <algorithm>
@@ -90,23 +91,42 @@ void TestApp::onCreateDevice() {
 
 	mSceneEntity = new Entity<CustomVertex3NormalUVTangentBinormal>(1, sceneMesh, sceneMaterials, sceneTextures); 
 	
-	CustomTriangle<CustomVertex3NormalUVTangentBinormal>* test = mSceneEntity->getTriangles();
+	CustomTriangle<CustomVertex3NormalUVTangentBinormal>* triData = mSceneEntity->getTriangles();
+
+	std::vector<int> ints;
+	ints.push_back(2);
+	ints.push_back(8);
+	ints.push_back(3);
+	ints.push_back(6);
+
+	std::sort(ints.begin(), ints.end(), std::less<int>());
+
+	std::vector<CustomTriangle<CustomVertex3NormalUVTangentBinormal>> triVec;
+
+	char buffer[55];
+	
 
 	for(int i = 0; i < mSceneEntity->getTriangleCount(); ++i) {
-		
-			/*test[i].mP1->normal.x = -5.0f;
-			test[i].mP1->normal.y = -5.0f;
-			test[i].mP1->normal.z = -5.0f;
+		triVec.push_back(triData[i]);
+		sprintf(buffer, "Triangle %d\n" ,i);
+		OutputDebugStringA(buffer);
 
-			test[i].mP2->normal.x = -5.0f;
-			test[i].mP2->normal.y = -5.0f;
-			test[i].mP2->normal.z = -5.0f;
-
-			test[i].mP3->normal.x = -5.0f;
-			test[i].mP3->normal.y = -5.0f;
-			test[i].mP3->normal.z = -5.0f;*/
+		sprintf(buffer, "Vertex1 X: %f Y: %f Z: %f\n", triData[i].mP1->pos.x, triData[i].mP1->pos.y, triData[i].mP1->pos.x);
+		OutputDebugStringA(buffer);
 		
+		sprintf(buffer, "Vertex2 X: %f Y: %f Z: %f\n", triData[i].mP2->pos.x, triData[i].mP2->pos.y, triData[i].mP2->pos.x);
+		OutputDebugStringA(buffer);
+
+		sprintf(buffer, "Vertex2 X: %f Y: %f Z: %f\n\n", triData[i].mP3->pos.x, triData[i].mP3->pos.y, triData[i].mP3->pos.x);
+		OutputDebugStringA(buffer);
+
+		/*if(i > mSceneEntity->getTriangleCount() / 2) {
+			 triData[i].mP1->pos.x = triData[i].mP1->pos.y = triData[i].mP1->pos.x = 0;
+		}*/
 	}
+	
+	KdTree<CustomVertex3NormalUVTangentBinormal> tree(triVec);
+
 	
 	// init light
 	initLight();
