@@ -92,6 +92,8 @@ private:
 	Entity<CustomVertex3NormalUVTangentBinormal>* mSceneEntity;
 
 	std::vector<std::pair<std::string, DWORD*>>::const_iterator mMSAAModeIterator;
+
+	VertexbufferInfo* mBuffer;
 };
 
 #endif

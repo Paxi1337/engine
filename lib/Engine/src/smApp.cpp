@@ -108,7 +108,7 @@ void TestApp::onCreateDevice() {
 
 	for(int i = 0; i < mSceneEntity->getTriangleCount(); ++i) {
 		triVec.push_back(triData[i]);
-		sprintf(buffer, "Triangle %d\n" ,i);
+		/*sprintf(buffer, "Triangle %d\n" ,i);
 		OutputDebugStringA(buffer);
 
 		sprintf(buffer, "Vertex1 X: %f Y: %f Z: %f\n", triData[i].mP1->pos.x, triData[i].mP1->pos.y, triData[i].mP1->pos.x);
@@ -119,13 +119,15 @@ void TestApp::onCreateDevice() {
 
 		sprintf(buffer, "Vertex2 X: %f Y: %f Z: %f\n\n", triData[i].mP3->pos.x, triData[i].mP3->pos.y, triData[i].mP3->pos.x);
 		OutputDebugStringA(buffer);
-
+*/
 		/*if(i > mSceneEntity->getTriangleCount() / 2) {
 			 triData[i].mP1->pos.x = triData[i].mP1->pos.y = triData[i].mP1->pos.x = 0;
 		}*/
 	}
 	
 	KdTree<CustomVertex3NormalUVTangentBinormal> tree(triVec);
+
+	std::vector<D3DXVECTOR3>& bb = tree.getBoundingBoxLines();
 
 	
 	// init light

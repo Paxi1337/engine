@@ -67,7 +67,7 @@ template <class CustomVertex>
 struct KdNodeInner : KdNode<CustomVertex> {
 
 	// constructor for inner nodes
-	KdNodeInner(SPLIT plane, int level, KdNode<CustomVertex>* left, KdNode<CustomVertex>* right, int data) : data(data)
+	KdNodeInner(SPLIT plane, int level, KdNode<CustomVertex>* left, KdNode<CustomVertex>* right, D3DXVECTOR3 data) : data(data)
     {
 		// initializing base class members
 		KdNode<CustomVertex>::plane = plane;
@@ -77,7 +77,7 @@ struct KdNodeInner : KdNode<CustomVertex> {
 	}
 
 
-	int data;         
+	D3DXVECTOR3 data;         
 };
 
 template <typename CustomVertex>
@@ -86,6 +86,11 @@ public:
 
     KdTree(std::vector<CustomTriangle<CustomVertex>>& list);
     ~KdTree();
+
+
+
+	inline std::vector<D3DXVECTOR3>& getBoundingBoxLines() { return m_boundingBoxLines; };
+
 private:
  
 	KdNode<CustomVertex>* root;
@@ -94,16 +99,21 @@ private:
     std::vector<KdNode<CustomVertex>*> m_nodeList;
 
     int getMedianIndex(std::vector<CustomTriangle<CustomVertex>>& v);
-    int getMedian(std::vector<CustomTriangle<CustomVertex>>& v);
+	// median should be the point of the triangle that exactly lies on the splitting edge
+    D3DXVECTOR3 getMedian(std::vector<CustomTriangle<CustomVertex>>& v);
 
     KdNode<CustomVertex>* insert(std::vector<CustomTriangle<CustomVertex>>& v, int level);
 
     void setSplittingPlane(std::vector<CustomTriangle<CustomVertex>>& v);
+	
+	std::vector<D3DXVECTOR3> m_boundingBoxLines;
+	SPLIT m_split;
+	int m_currentIndex;
 };
 
 
 template <typename CustomVertex>
-KdTree<CustomVertex>::KdTree(std::vector<CustomTriangle<CustomVertex>>& list) : root(NULL), m_vec(list) {
+KdTree<CustomVertex>::KdTree(std::vector<CustomTriangle<CustomVertex>>& list) : root(NULL), m_vec(list), m_split(X) {
     if(list.size() <= 0) {
         return;
     }
@@ -132,7 +142,7 @@ KdNode<CustomVertex>* KdTree<CustomVertex>::insert(std::vector<CustomTriangle<Cu
     std::vector<CustomTriangle<CustomVertex>> lower(v.begin(), v.begin() + medianIndex);
     std::vector<CustomTriangle<CustomVertex>> upper(v.begin() + medianIndex, v.end());
 
-	KdNode<CustomVertex>* n = new KdNodeInner<CustomVertex>(Compare<CustomVertex>::getSplittingPlane(), level, NULL, NULL, getMedian(v));
+	KdNode<CustomVertex>* n = new KdNodeInner<CustomVertex>(m_split, level, NULL, NULL, getMedian(v));
 
     n->left = insert(lower, level + 1);
     n->right = insert(upper, level + 1);
@@ -144,16 +154,19 @@ KdNode<CustomVertex>* KdTree<CustomVertex>::insert(std::vector<CustomTriangle<Cu
 
 template <typename CustomVertex>
 int KdTree<CustomVertex>::getMedianIndex(std::vector<CustomTriangle<CustomVertex>>& v) {
-    double index = floor(v.size() / 2);
-    
-	return (int)index;
+    int index = ceil(v.size() / 2);
+	m_currentIndex = index;
+	/*while(index % 3 != 0)
+		++index;
+    */
+	return index;
 }
 
 template <typename CustomVertex>
-int KdTree<CustomVertex>::getMedian(std::vector<CustomTriangle<CustomVertex>>& v) {
+D3DXVECTOR3 KdTree<CustomVertex>::getMedian(std::vector<CustomTriangle<CustomVertex>>& v) {
     
 
-	return 1;
+	return D3DXVECTOR3(0.0f,0.0f,0.0f);
 }
 
 // TODO::
@@ -161,7 +174,122 @@ int KdTree<CustomVertex>::getMedian(std::vector<CustomTriangle<CustomVertex>>& v
 // then get the dimension with the maximum expansion
 template <typename CustomVertex>
 void KdTree<CustomVertex>::setSplittingPlane(std::vector<CustomTriangle<CustomVertex>>& v) {
-  
+	
+	// we need the vertices to get the bounding box of the current node
+	std::vector<CustomVertex*> vertices;
+	for(unsigned int i = 0; i < v.size(); ++i) {
+		vertices.push_back(v[i].mP1);
+		vertices.push_back(v[i].mP1);
+		vertices.push_back(v[i].mP1);
+	}
+
+	// using lambda compare function
+	// [] is called the capture specifier telling the compiler a lamba function is used
+	// http://www.cprogramming.com/c++11/c++11-lambda-closures.html
+	auto xExtremes = std::minmax_element(vertices.begin(),
+									  vertices.end(),
+									  [](const CustomVertex* lhs, const CustomVertex* rhs) {
+									      return lhs->pos.x < rhs->pos.x;
+									  });
+
+	float distX = 0;
+	std::vector<CustomVertex*>::iterator minIt = xExtremes.first;
+	std::vector<CustomVertex*>::iterator maxIt = xExtremes.second;
+
+	CustomVertex* minData = *minIt;
+	CustomVertex* maxData = *maxIt;
+	float minx = minData->pos.x;
+	float maxx = maxData->pos.x;
+	distX = abs(maxData->pos.x - minData->pos.x);
+
+
+	auto yExtremes = std::minmax_element(vertices.begin(),
+									  vertices.end(),
+									  [](const CustomVertex* lhs, const CustomVertex* rhs) {
+									      return lhs->pos.y < rhs->pos.y;
+									  });
+
+	float distY = 0;
+	minIt = yExtremes.first;
+	maxIt = yExtremes.second;
+
+	minData = *minIt;
+	maxData = *maxIt;
+	float miny = minData->pos.y;
+	float maxy = maxData->pos.y;
+
+	distY = abs(maxData->pos.y - minData->pos.y);
+
+	auto zExtremes = std::minmax_element(vertices.begin(),
+									  vertices.end(),
+									  [](const CustomVertex* lhs, const CustomVertex* rhs) {
+									      return lhs->pos.z < rhs->pos.z;
+									  });
+
+	float distZ = 0;
+	minIt = yExtremes.first;
+	maxIt = yExtremes.second;
+
+	minData = *minIt;
+	maxData = *maxIt;
+	float minz = minData->pos.z;
+	float maxz = maxData->pos.z;
+
+	distZ = abs(maxz - minz);
+
+	m_split = X;
+
+	if(distY > distX)
+		m_split = Y;
+
+	if(distZ > distY)
+		m_split = Z;
+
+	// the bounding box is defined via 8 points that can be calcuated by permutating the min/max coords
+	
+	D3DXVECTOR3 lowerFrontLeft(minx, miny, minz);
+	D3DXVECTOR3 lowerFrontRight(maxx, miny, minz);
+	D3DXVECTOR3 upperFrontRight(maxx, maxy, minz);
+	D3DXVECTOR3 upperFrontLeft(minx, maxy, minz);
+	D3DXVECTOR3 lowerBackLeft(minx, miny, maxz);
+	D3DXVECTOR3 lowerBackRight(maxx, miny, maxz);
+	D3DXVECTOR3 upperBackRight(maxx, maxy, maxz);
+	D3DXVECTOR3 upperBackLeft(minx, maxy, maxz);
+
+	// lines will be drawed as LINELIST for now
+	
+	// front quad
+	m_boundingBoxLines.push_back(lowerFrontLeft);
+	m_boundingBoxLines.push_back(lowerFrontRight);
+	m_boundingBoxLines.push_back(lowerFrontRight);
+	m_boundingBoxLines.push_back(upperFrontRight);
+	m_boundingBoxLines.push_back(upperFrontRight);
+	m_boundingBoxLines.push_back(upperFrontLeft);
+	m_boundingBoxLines.push_back(upperFrontLeft);
+	m_boundingBoxLines.push_back(lowerFrontLeft);
+
+	// backquad
+	m_boundingBoxLines.push_back(lowerBackLeft);
+	m_boundingBoxLines.push_back(lowerBackRight);
+	m_boundingBoxLines.push_back(lowerBackRight);
+	m_boundingBoxLines.push_back(upperBackRight);
+	m_boundingBoxLines.push_back(upperBackRight);
+	m_boundingBoxLines.push_back(upperBackLeft);
+	m_boundingBoxLines.push_back(upperBackLeft);
+	m_boundingBoxLines.push_back(lowerBackLeft);
+
+	// z lines
+	m_boundingBoxLines.push_back(upperFrontLeft);
+	m_boundingBoxLines.push_back(upperBackLeft);
+	m_boundingBoxLines.push_back(upperFrontRight);
+	m_boundingBoxLines.push_back(upperBackRight);
+
+	m_boundingBoxLines.push_back(lowerFrontLeft);
+	m_boundingBoxLines.push_back(lowerBackLeft);
+	m_boundingBoxLines.push_back(lowerFrontRight);
+	m_boundingBoxLines.push_back(lowerBackRight);
+
+
 }
 
 #endif
