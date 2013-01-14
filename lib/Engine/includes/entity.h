@@ -6,6 +6,7 @@
 template <class CustomVertex>
 struct Entity {
 	Entity(unsigned int ID, ID3DXMesh* mesh, std::vector<Material>* mtrls, std::vector<IDirect3DTexture9*>* texs);
+	Entity(unsigned int ID, ID3DXMesh* mesh);
 	~Entity();
 
 	CustomTriangle<CustomVertex>* getTriangles();
@@ -37,16 +38,33 @@ Entity<CustomVertex>::Entity(unsigned int ID,
 }
 
 template <class CustomVertex>
+Entity<CustomVertex>::Entity(unsigned int ID,
+			   ID3DXMesh* mesh) : mID(ID),
+														mTriangleCount(0),
+														mMesh(mesh),
+														mMtrls(0),
+														mTexs(0),
+														mTriangles(0)
+																													
+{
+	mTriangleCount = mMesh->GetNumFaces();
+}
+
+template <class CustomVertex>
 Entity<CustomVertex>::~Entity() {
 	mMesh->Release();
-		
-	for(std::vector<IDirect3DTexture9*>::iterator it = mTexs->begin(); it != mTexs->end(); ++it) {
-		IDirect3DTexture9* mat = *it;
-		mat->Release();
+	
+	if(mTexs != 0) {
+		for(std::vector<IDirect3DTexture9*>::iterator it = mTexs->begin(); it != mTexs->end(); ++it) {
+			IDirect3DTexture9* mat = *it;
+			mat->Release();
+		}
+		delete mTexs;
 	}
-		
-	delete mMtrls;
-	delete mTexs;
+
+	if(mMtrls != 0)
+		delete mMtrls;
+	
 
 	if(mTriangles)
 		delete mTriangles;

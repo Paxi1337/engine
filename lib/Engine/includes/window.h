@@ -31,7 +31,8 @@ public:
 
 	static LRESULT __stdcall messageCallback(HWND hWindow, UINT message, WPARAM wParam, LPARAM lParam);
 	
-	
+	inline HWND getWindowHandle() { return m_hWindow; }
+
 	void attachApp(App* currentApp);
 	
 	DirectX9* getRenderDevice();

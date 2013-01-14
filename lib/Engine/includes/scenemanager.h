@@ -11,29 +11,13 @@ class SceneManager {
 
 };
 
-#define MAXLEVEL 10
+#define MAXLEVEL 50
 
 // 3-dim kd-tree
 enum SPLIT {
     X = 0, Y, Z
 };
 
-// explicit specialisation for std::less template class
-// this is need for std::sort
-template<>  
-struct std::less<CustomTriangle<CustomVertex3NormalUVTangentBinormal>>
-{
-    bool operator()(const CustomTriangle<CustomVertex3NormalUVTangentBinormal>& k1, const CustomTriangle<CustomVertex3NormalUVTangentBinormal>& k2) const
-    {
-		// searching by the highes value depending on splitting plane
-		// both triangle store 3*x, 3*y and 3*z value
-		// we sort by its focal point
-		D3DXVECTOR3 fp1 = (k1.mP1->pos + k1.mP2->pos + k1.mP3->pos) / 3.0f;
-		D3DXVECTOR3 fp2 = (k2.mP1->pos + k2.mP2->pos + k2.mP3->pos) / 3.0f;
-
-		return fp1 < fp2;
-    }
-};
 
 // abstract base class for KdNodes
 template <class CustomVertex>
@@ -48,7 +32,7 @@ struct KdNode {
 // therefore a pointer to a CustomTriangle that internally stores 3 CustomVertices from the meshes vertex buffer
 template <class CustomVertex>
 struct KdNodeLeaf : KdNode<CustomVertex> {
-	KdNodeLeaf(SPLIT plane, int level, KdNode<CustomVertex>* left, KdNode<CustomVertex>* right, CustomTriangle<CustomVertex>* data) : data(data)
+	KdNodeLeaf(SPLIT plane, int level, KdNode<CustomVertex>* left, KdNode<CustomVertex>* right, std::vector<CustomTriangle<CustomVertex>>& data) : data(data)
     {
 		// initializing base class members
 		KdNode<CustomVertex>::plane = plane;
@@ -58,11 +42,10 @@ struct KdNodeLeaf : KdNode<CustomVertex> {
 		KdNode<CustomVertex>::right = NULL;
 	}
 
-	CustomTriangle<CustomVertex>* data;
+	std::vector<CustomTriangle<CustomVertex>> data;
 };
 
 // inner nodes have to store median value
-// not sure about data type yet currenty assuming int
 template <class CustomVertex>
 struct KdNodeInner : KdNode<CustomVertex> {
 
@@ -87,9 +70,10 @@ public:
     KdTree(std::vector<CustomTriangle<CustomVertex>>& list);
     ~KdTree();
 
-
-
 	inline std::vector<D3DXVECTOR3>& getBoundingBoxLines() { return m_boundingBoxLines; };
+	inline std::vector<KdNode<CustomVertex>*>& getKdNodes() { return m_nodeList; }
+
+	static SPLIT s_split;
 
 private:
  
@@ -107,13 +91,16 @@ private:
     void setSplittingPlane(std::vector<CustomTriangle<CustomVertex>>& v);
 	
 	std::vector<D3DXVECTOR3> m_boundingBoxLines;
-	SPLIT m_split;
+	
 	int m_currentIndex;
 };
 
+template <typename CustomVertex>
+SPLIT KdTree<CustomVertex>::s_split = X;
+
 
 template <typename CustomVertex>
-KdTree<CustomVertex>::KdTree(std::vector<CustomTriangle<CustomVertex>>& list) : root(NULL), m_vec(list), m_split(X) {
+KdTree<CustomVertex>::KdTree(std::vector<CustomTriangle<CustomVertex>>& list) : root(NULL), m_vec(list) {
     if(list.size() <= 0) {
         return;
     }
@@ -129,20 +116,22 @@ KdTree<CustomVertex>::~KdTree() {
 template <typename CustomVertex>
 KdNode<CustomVertex>* KdTree<CustomVertex>::insert(std::vector<CustomTriangle<CustomVertex>>& v, int level) {
     // condition to break
-    if(v.size() == 1 || level >= MAXLEVEL) {
+    if(v.size() <= 5 || level >= MAXLEVEL) {
 
-        return 0;
+		KdNodeLeaf<CustomVertex>* n = new KdNodeLeaf<CustomVertex>(s_split, level, NULL, NULL, v);
+		m_nodeList.push_back(n);
+        return n;
     }
 
     setSplittingPlane(v);
-    std::sort(v.begin(), v.end(), std::less<CustomTriangle<CustomVertex3NormalUVTangentBinormal>>());
+    //std::sort(v.begin(), v.end(), std::less<CustomTriangle<CustomVertex3NormalUVTangentBinormal>>());
 
     int medianIndex = getMedianIndex(v);
 
     std::vector<CustomTriangle<CustomVertex>> lower(v.begin(), v.begin() + medianIndex);
     std::vector<CustomTriangle<CustomVertex>> upper(v.begin() + medianIndex, v.end());
 
-	KdNode<CustomVertex>* n = new KdNodeInner<CustomVertex>(m_split, level, NULL, NULL, getMedian(v));
+	KdNode<CustomVertex>* n = new KdNodeInner<CustomVertex>(s_split, level, NULL, NULL, getMedian(v));
 
     n->left = insert(lower, level + 1);
     n->right = insert(upper, level + 1);
@@ -164,9 +153,11 @@ int KdTree<CustomVertex>::getMedianIndex(std::vector<CustomTriangle<CustomVertex
 
 template <typename CustomVertex>
 D3DXVECTOR3 KdTree<CustomVertex>::getMedian(std::vector<CustomTriangle<CustomVertex>>& v) {
-    
+    CustomTriangle<CustomVertex> tri = v.at(m_currentIndex); 
+	
+	D3DXVECTOR3 fp1 = (tri.mP1->pos + tri.mP2->pos + tri.mP3->pos) / 3.0f;
 
-	return D3DXVECTOR3(0.0f,0.0f,0.0f);
+	return fp1;
 }
 
 // TODO::
@@ -175,12 +166,17 @@ D3DXVECTOR3 KdTree<CustomVertex>::getMedian(std::vector<CustomTriangle<CustomVer
 template <typename CustomVertex>
 void KdTree<CustomVertex>::setSplittingPlane(std::vector<CustomTriangle<CustomVertex>>& v) {
 	
+
+	/*if(m_boundingBoxLines.size() == 24)
+	return;*/
+
 	// we need the vertices to get the bounding box of the current node
 	std::vector<CustomVertex*> vertices;
 	for(unsigned int i = 0; i < v.size(); ++i) {
 		vertices.push_back(v[i].mP1);
 		vertices.push_back(v[i].mP1);
 		vertices.push_back(v[i].mP1);
+		//vertices.at(i)->pos.x = 0;
 	}
 
 	// using lambda compare function
@@ -197,7 +193,7 @@ void KdTree<CustomVertex>::setSplittingPlane(std::vector<CustomTriangle<CustomVe
 	std::vector<CustomVertex*>::iterator maxIt = xExtremes.second;
 
 	CustomVertex* minData = *minIt;
-	CustomVertex* maxData = *maxIt;
+ 	CustomVertex* maxData = *maxIt;
 	float minx = minData->pos.x;
 	float maxx = maxData->pos.x;
 	distX = abs(maxData->pos.x - minData->pos.x);
@@ -227,8 +223,8 @@ void KdTree<CustomVertex>::setSplittingPlane(std::vector<CustomTriangle<CustomVe
 									  });
 
 	float distZ = 0;
-	minIt = yExtremes.first;
-	maxIt = yExtremes.second;
+	minIt = zExtremes.first;
+	maxIt = zExtremes.second;
 
 	minData = *minIt;
 	maxData = *maxIt;
@@ -237,13 +233,20 @@ void KdTree<CustomVertex>::setSplittingPlane(std::vector<CustomTriangle<CustomVe
 
 	distZ = abs(maxz - minz);
 
-	m_split = X;
 
-	if(distY > distX)
-		m_split = Y;
+	float maxDist = distX;
 
-	if(distZ > distY)
-		m_split = Z;
+	s_split = X;
+
+	if(distY > maxDist) {
+		s_split = Y;
+		maxDist = distY;
+	}
+
+	if(distZ > maxDist) {
+		s_split = Z;
+		maxDist = distZ;
+	}
 
 	// the bounding box is defined via 8 points that can be calcuated by permutating the min/max coords
 	
@@ -292,4 +295,30 @@ void KdTree<CustomVertex>::setSplittingPlane(std::vector<CustomTriangle<CustomVe
 
 }
 
+// explicit specialisation for std::less template class
+// this is need for std::sort
+template<>  
+struct std::less<CustomTriangle<CustomVertex3NormalUVTangentBinormal>>
+{
+	bool operator()(const CustomTriangle<CustomVertex3NormalUVTangentBinormal>& k1, const CustomTriangle<CustomVertex3NormalUVTangentBinormal>& k2) const
+	{
+		// searching by the highest value depending on splitting plane
+		// both triangle store 3*x, 3*y and 3*z value
+		// we sort by its focal point
+		D3DXVECTOR3 fp1 = (k1.mP1->pos + k1.mP2->pos + k1.mP3->pos) / 3.0f;
+		D3DXVECTOR3 fp2 = (k2.mP1->pos + k2.mP2->pos + k2.mP3->pos) / 3.0f;
+
+		if(KdTree<CustomVertex3NormalUVTangentBinormal>::s_split == X) {
+			return fp1.x < fp2.x;
+		}
+		else if(KdTree<CustomVertex3NormalUVTangentBinormal>::s_split == Y) {
+			return fp1.y < fp2.y;
+		}
+		else {
+			return fp1.z < fp2.z;
+		}
+	}
+};
+
 #endif
+
