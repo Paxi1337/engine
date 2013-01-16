@@ -12,6 +12,7 @@ struct Entity {
 	CustomTriangle<CustomVertex>* getTriangles();
 	inline DWORD getTriangleCount() const { return mTriangleCount; }
 
+	void render();
 
 	unsigned int mID;
 	ID3DXMesh* mMesh;
@@ -97,6 +98,12 @@ CustomTriangle<CustomVertex>* Entity<CustomVertex>::getTriangles() {
 	}
 
 	return mTriangles;
+}
+
+template <class CustomVertex>
+void Entity<CustomVertex>::render() {
+
+	
 }
 
 #endif

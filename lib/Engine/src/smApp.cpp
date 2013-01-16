@@ -3,6 +3,7 @@
 #include "../includes/xManager.h"
 #include "../includes/structdeclarations.h"
 #include "../includes/scenemanager.h"
+#include "../includes/sampleShader.h"
 
 #include <vector>
 #include <algorithm>
@@ -52,6 +53,8 @@ TestApp::~TestApp() {
 }
 
 void TestApp::onCreateDevice() {
+
+	//SampleShader s(D3DDEVICE);
 
 	// set vertex delaration	
 	mWindow->getRenderDevice()->setVertexDeclaration(CustomVertex3NormalUVTangentBinormal::decl);
