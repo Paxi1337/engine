@@ -100,7 +100,7 @@ void XManager::loadXFile(IDirect3DDevice9* dev, const std::string& filename, ID3
 					//std::string sub = s.substr(pos,s.size());
 
 					if(strcmp(s.substr(pos+1,s.size()).c_str(),"Watcher.tga") == 0) {
-						newFileName.append("Watcher_Yellow.tga");
+						newFileName.append("Watcher_Black.tga");
 					}
 					else {
 						newFileName.append(s.substr(pos+1,s.size()));
