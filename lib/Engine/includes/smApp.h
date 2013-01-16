@@ -41,21 +41,16 @@ private:
 	VertexbufferInfo* mCube;
 	VertexbufferInfo* mGround;
 
-	// render techniques
+	// shader handles
 	D3DXHANDLE mTechniqueHandle;
 	D3DXHANDLE mTechniqueWireFrameHandle;
 	D3DXHANDLE mShadowMapTechniqueHandle;
-
 	D3DXHANDLE mWorldHandle;
 	D3DXHANDLE mViewProjectionHandle;
-
 	D3DXHANDLE mLightViewProjectionHandle;
-
 	D3DXHANDLE mCameraPosHandle;
-
 	D3DXHANDLE mLightHandle;
 	D3DXHANDLE mMaterialHandle;
-
 	D3DXHANDLE mTextureHandle;
 	D3DXHANDLE mShadowTextureHandle;
 	D3DXHANDLE mNormalmapHandle;
@@ -67,19 +62,19 @@ private:
 	Material mMaterial;
 
 	IDirect3DTexture9* mWhiteTexture;
+	IDirect3DTexture9* mYellowTextureBricks;
 	IDirect3DTexture9* mNormalTextureFloor;
 	IDirect3DTexture9* mNormalTextureBricks;
-
+	
 	DrawableTexture2D* mShadowMap;
 	
 	D3DXCOLOR mAmbient;
 
 	bool mWireframeMode;
 
-	double mTimeSinceElapsedTimeReset;
-
+	
 	Timer mT;
-
+	double mTimeSinceElapsedTimeReset;
 
 	// transforms
 	D3DXMATRIX mWorld;
@@ -90,10 +85,19 @@ private:
 	D3DXMATRIX mProjectionLight;
 
 	Entity<CustomVertex3NormalUVTangentBinormal>* mSceneEntity;
+	Entity<CustomVertex3NormalUVTangentBinormal>* mLightEntity;
+	Entity<CustomVertex3NormalUVTangentBinormal>* mWatcherEntity;
+	Entity<CustomVertex3NormalUVTangentBinormal>* mStatueEntity;
+	
 
 	std::vector<std::pair<std::string, DWORD*>>::const_iterator mMSAAModeIterator;
 
 	VertexbufferInfo* mBuffer;
+	VertexbufferInfo* mSelectedTriangle;
+
+	std::vector<CustomTriangle<CustomVertex3NormalUVTangentBinormal>> mSceneTriangles;
+
+	//void getMousePosition();
 };
 
 #endif
