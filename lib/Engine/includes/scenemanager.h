@@ -72,16 +72,23 @@ public:
 
 	inline std::vector<D3DXVECTOR3>& getBoundingBoxLines() { return m_boundingBoxLines; };
 	inline std::vector<KdNode<CustomVertex>*>& getKdNodes() { return m_nodeList; }
+	inline KdNode<CustomVertex>* getRootNode() { return m_root; }
+
+	CustomTriangle<CustomVertex>* testRayIntersection(KdNode<CustomVertex>* n, D3DXVECTOR3& rayDir, D3DXVECTOR3& rayPos, int minDistance, int maxDistance);
 
 	static SPLIT s_split;
 
 private:
  
-	KdNode<CustomVertex>* root;
+	KdNode<CustomVertex>* m_root;
+	std::vector<KdNode<CustomVertex>*> m_nodeList;
 
     std::vector<CustomTriangle<CustomVertex>> m_vec;
-    std::vector<KdNode<CustomVertex>*> m_nodeList;
+	std::vector<CustomTriangle<CustomVertex>> m_vecCpy;
 
+	std::vector<D3DXVECTOR3> m_boundingBoxLines;
+	int m_currentIndex;
+   
     int getMedianIndex(std::vector<CustomTriangle<CustomVertex>>& v);
 	// median should be the point of the triangle that exactly lies on the splitting edge
     D3DXVECTOR3 getMedian(std::vector<CustomTriangle<CustomVertex>>& v);
@@ -89,10 +96,6 @@ private:
     KdNode<CustomVertex>* insert(std::vector<CustomTriangle<CustomVertex>>& v, int level);
 
     void setSplittingPlane(std::vector<CustomTriangle<CustomVertex>>& v);
-	
-	std::vector<D3DXVECTOR3> m_boundingBoxLines;
-	
-	int m_currentIndex;
 };
 
 template <typename CustomVertex>
@@ -100,12 +103,13 @@ SPLIT KdTree<CustomVertex>::s_split = X;
 
 
 template <typename CustomVertex>
-KdTree<CustomVertex>::KdTree(std::vector<CustomTriangle<CustomVertex>>& list) : root(NULL), m_vec(list) {
+KdTree<CustomVertex>::KdTree(std::vector<CustomTriangle<CustomVertex>>& list) : m_vec(list) {
     if(list.size() <= 0) {
         return;
     }
 
-    insert(m_vec, 0);
+	m_vecCpy.insert(m_vecCpy.begin(), m_vec.begin(), m_vec.end());
+	m_root = insert(m_vec, 0);
 }
 
 template <typename CustomVertex>
@@ -116,7 +120,7 @@ KdTree<CustomVertex>::~KdTree() {
 template <typename CustomVertex>
 KdNode<CustomVertex>* KdTree<CustomVertex>::insert(std::vector<CustomTriangle<CustomVertex>>& v, int level) {
     // condition to break
-    if(v.size() <= 5 || level >= MAXLEVEL) {
+    if(v.size() <= 5000 || level >= MAXLEVEL) {
 
 		KdNodeLeaf<CustomVertex>* n = new KdNodeLeaf<CustomVertex>(s_split, level, NULL, NULL, v);
 		m_nodeList.push_back(n);
@@ -124,7 +128,8 @@ KdNode<CustomVertex>* KdTree<CustomVertex>::insert(std::vector<CustomTriangle<Cu
     }
 
     setSplittingPlane(v);
-    //std::sort(v.begin(), v.end(), std::less<CustomTriangle<CustomVertex3NormalUVTangentBinormal>>());
+    std::sort(m_vecCpy.begin(), m_vecCpy.end(), std::less<CustomTriangle<CustomVertex3NormalUVTangentBinormal>>());
+
 
     int medianIndex = getMedianIndex(v);
 
@@ -292,7 +297,73 @@ void KdTree<CustomVertex>::setSplittingPlane(std::vector<CustomTriangle<CustomVe
 	m_boundingBoxLines.push_back(lowerFrontRight);
 	m_boundingBoxLines.push_back(lowerBackRight);
 
+}
 
+template <typename CustomVertex>
+CustomTriangle<CustomVertex>* KdTree<CustomVertex>::testRayIntersection(KdNode<CustomVertex>* node, D3DXVECTOR3& rayDir, D3DXVECTOR3& rayPos, int minDistance, int maxDistance) {
+	if (node == 0) 
+		return 0;
+
+	CustomTriangle<CustomVertex>* current = 0;
+	
+	bool intersected = false;
+
+	// a node is a leaf node if left and right == 0
+	if (node->left == NULL){
+		// cast at compile time
+		KdNodeLeaf<CustomVertex>* n = static_cast<KdNodeLeaf<CustomVertex>*>(node);
+		
+		//test all primitives in the leaf
+		for(int i = 0; i < n->data.size(); ++i) {
+			if(D3DXIntersectTri(&n->data[i].mP1->pos, &n->data[i].mP2->pos, &n->data[i].mP3->pos, &rayPos, &rayDir, NULL, NULL, NULL)) {
+				return &n->data.at(i);
+			}
+		}
+
+		return 0;
+	}
+	// inner node
+	else{
+		// cast at compile time
+		KdNodeInner<CustomVertex>* n = static_cast<KdNodeInner<CustomVertex>*>(node);
+		
+		SPLIT axis = n->plane;
+		
+		D3DXVECTOR3 splitPos = n->data;
+		double tSplit = (splitPos[axis] - rayPos[axis]) / rayDir[axis];
+		
+		// left
+		KdNodeInner<CustomVertex>* nearNode = static_cast<KdNodeInner<CustomVertex>*>(((rayPos[axis] < splitPos[axis]) ? n->left : n->right));
+		// right
+		KdNodeInner<CustomVertex>* farNode = static_cast<KdNodeInner<CustomVertex>*>(((rayPos[axis] < splitPos[axis]) ? n->right : n->left));
+
+		if (tSplit > maxDistance)
+			return testRayIntersection(nearNode , rayDir, rayPos, minDistance, maxDistance);//case A
+		else if (tSplit < minDistance){
+			if(tSplit>0)
+				return testRayIntersection(farNode, rayDir, rayPos, minDistance, maxDistance);//case B
+			else if(tSplit<0)
+				return testRayIntersection(nearNode, rayDir, rayPos, minDistance, maxDistance);//case C
+			else{//tSplit==0
+				if(rayDir[axis]<0)
+					return testRayIntersection(farNode, rayDir, rayPos, minDistance, maxDistance);//case D
+				else
+					return testRayIntersection(nearNode, rayDir, rayPos, minDistance, maxDistance);//case E
+			}
+		}
+		else{
+			if(tSplit>0){//case F
+				current = testRayIntersection(nearNode, rayDir, rayPos, minDistance, maxDistance);
+				if (current != 0)
+					return current;
+				else
+					return testRayIntersection(farNode, rayDir, rayPos, minDistance, maxDistance);
+			}
+			else{
+				return testRayIntersection(nearNode, rayDir, rayPos, minDistance, maxDistance);//case G
+			}
+		}
+	}
 }
 
 // explicit specialisation for std::less template class
