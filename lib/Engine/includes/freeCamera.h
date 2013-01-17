@@ -18,15 +18,15 @@ public:
 	~FreeCamera(void);
 
 	void calculateViewMatrix(D3DXMATRIX& viewMatrix);
-	void calculateProjectionMatrix(D3DXMATRIX& projectionMatrix);
+	void calculateProjectionMatrix(D3DXMATRIX& projectionMatrix, float nP, float fP);
 	void calculateProjectionMatrixCustom(D3DXMATRIX& projectionMatrix, float fov, float aspect, int nearPlane, int farPlane);
 	
 	// getter / setter
 	inline float getYaw() const { return mYaw; }
 	inline float getPitch() const { return mPitch; }
 	inline float getRoll() const { return mRoll; }
-	inline D3DXVECTOR3 getPosition() const { return mPosition; }
-	inline D3DXVECTOR3 getLookAt() const { return mLook; }
+	inline const D3DXVECTOR3 getPosition() const { return mPosition; }
+	inline const D3DXVECTOR3 getLookAt() const { return mLook; }
 	inline void setPosition(const D3DXVECTOR3& newPosition) { mPosition = newPosition; }
 	inline void setLookAt(const D3DXVECTOR3& newLookAt) { mLook = newLookAt; }
 	

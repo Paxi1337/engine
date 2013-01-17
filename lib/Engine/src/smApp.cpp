@@ -3,6 +3,7 @@
 #include "../includes/xManager.h"
 #include "../includes/structdeclarations.h"
 #include "../includes/scenemanager.h"
+#include "../includes/sampleShader.h"
 
 #include <vector>
 #include <algorithm>
@@ -12,18 +13,26 @@
 #define D3DDEVICE mWindow->getRenderDevice()->getD3D9Device()
 #define SAVEDELETE(x) { if(x) delete x; }
 
-const float kCameraMovementSpeed=0.4f;
+float kCameraMovementSpeed=0.4f;
 const float kCameraRotationSpeed=0.01f;
 const float lightRotationSpeed=0.1f;
+
+CustomTriangle<CustomVertex3NormalUVTangentBinormal>* triData;
+
+
+
+static bool cubeInit = false;
 
 TestApp::TestApp(Window* window) : mWindow(window), 
 								   mCube(NULL),
 								   mGround(NULL),
 								   mTimeSinceElapsedTimeReset(0.0f), 
-								   mSceneCamera(new FreeCamera(D3DXVECTOR3(0.0f, 5.0f, -50.0f))),
-								   mLightCamera(new FreeCamera(D3DXVECTOR3(100.0f, 30.0f, 0.0f))),
+								   mSceneCamera(new FreeCamera(D3DXVECTOR3(0.0f, 10.0f, 0.0f))),
+								   mLightCamera(new FreeCamera(D3DXVECTOR3(0.0f, 60.0f, 130.0f))),
 								   mWireframeMode(false),
-								   mSceneEntity(0)
+								   mSceneEntity(0),
+								   mBuffer(0),
+								   mSelectedTriangle(0)
 {
 	mMSAAModeIterator = mWindow->getRenderDevice()->getMSAAModes().begin();
 }
@@ -38,40 +47,106 @@ TestApp::~TestApp() {
 	mNormalTextureFloor->Release();
 	
 	delete mSceneEntity;
+	delete mLightEntity;
+	delete mWatcherEntity;
+	delete mStatueEntity;
 }
 
 void TestApp::onCreateDevice() {
+
+	//SampleShader s(D3DDEVICE);
 
 	// set vertex delaration	
 	mWindow->getRenderDevice()->setVertexDeclaration(CustomVertex3NormalUVTangentBinormal::decl);
 
 	// load shader
 	mWindow->getRenderDevice()->loadEffectFromFile("./shader/shadow.fx");
-
+	
+	// init shader handles
+	initShaderHandles();
+	
 	// load textures
 	HR(D3DXCreateTextureFromFileA(D3DDEVICE, "./texture/stone.jpg", &mWhiteTexture));
-	HR(D3DXCreateTextureFromFileA(D3DDEVICE, "./texture/stone_normal_map.jpg", &mNormalTextureBricks));
-	HR(D3DXCreateTextureFromFileA(D3DDEVICE, "./texture/floor_nmap.bmp", &mNormalTextureFloor));
-
+	HR(D3DXCreateTextureFromFileA(D3DDEVICE, "./texture/floor_nmap.bmp", &mNormalTextureBricks));
+	HR(D3DXCreateTextureFromFileA(D3DDEVICE, "./texture/Watcher_N.tga", &mNormalTextureFloor));
+	HR(D3DXCreateTextureFromFileA(D3DDEVICE, "./texture/yellow.jpg", &mYellowTextureBricks));
+	// init meshes
+	ID3DXMesh* box;
 	ID3DXMesh* tempMesh = 0;
 	ID3DXMesh* sceneMesh = 0;
-	std::vector<Material>* sceneMaterials = new std::vector<Material>();
-	std::vector<IDirect3DTexture9*>* sceneTextures = new std::vector<IDirect3DTexture9*>();
+	D3DXCreateSphere(D3DDEVICE, 3, 30, 30, &tempMesh, NULL);
 
-	// load scene Mesh
-	XManager::loadXFile(D3DDEVICE, "./model/testscene/BasicColumnScene.x", &tempMesh, sceneMaterials, sceneTextures);
-
-	// Get the vertex declaration for the NMapVertex.
 	D3DVERTEXELEMENT9 elems[MAX_FVF_DECL_SIZE];
 	UINT numElems = 0;
 	HR(CustomVertex3NormalUVTangentBinormal::decl->GetDeclaration(elems, &numElems));
 
-	// Clone the mesh to the NMapVertex format.
 	ID3DXMesh* clonedTempMesh = 0;
 	HR(tempMesh->CloneMesh(D3DXMESH_MANAGED, elems, D3DDEVICE, &clonedTempMesh));
+	HR(D3DXComputeTangentFrameEx(
+	  clonedTempMesh, // Input mesh
+	  D3DDECLUSAGE_TEXCOORD, 0, // Vertex element of input tex-coords.  
+      D3DDECLUSAGE_BINORMAL, 0, // Vertex element to output binormal.
+	  D3DDECLUSAGE_TANGENT, 0,  // Vertex element to output tangent.
+      D3DDECLUSAGE_NORMAL, 0,   // Vertex element to output normal.
+      0, // Options
+      0, // Adjacency
+	  0.01f, 0.25f, 0.01f, // Thresholds for handling errors
+	  &box, // Output mesh
+	  0));         // Vertex Remapping
 
-	// Now use D3DXComputeTangentFrameEx to build the TNB-basis for each vertex
-	// in the mesh.  
+	tempMesh->Release();
+	clonedTempMesh->Release();
+
+	// lock the vertex buffer
+	CustomVertex3NormalUVTangentBinormal* pVerts;
+    HR(box->LockVertexBuffer(0,(void**) &pVerts));
+	
+	D3DXVECTOR3* pVertices = new D3DXVECTOR3[box->GetNumVertices()];
+	for (int i=0;i<box->GetNumVertices();i++) {
+		pVertices[i] = pVerts[i].pos;
+	}
+	// determine extents
+	D3DXVECTOR3 vMin,vMax;
+	D3DXComputeBoundingBox(pVertices,box->GetNumVertices(),0,&vMin,&vMax);
+	delete[] pVertices;
+
+	// calculate center
+	D3DXVECTOR3 vCent;
+	vCent=(vMax+vMin)*0.5f;
+
+	// loop through the vertices
+	for (int i=0;i<box->GetNumVertices();i++) {
+
+		// calculate normalized offset from center
+		D3DXVECTOR3 v;
+		v=pVerts->pos-vCent;
+		D3DXVec3Normalize(&v,&v);
+
+		// calculate texture coordinates
+		pVerts->u=asinf(v.x)/D3DX_PI+0.5f;
+		pVerts->v=asinf(v.y)/D3DX_PI+0.5f;
+
+		// go to next vertex
+		pVerts++;
+	}
+
+    HR(box->UnlockVertexBuffer());
+    
+
+	tempMesh = 0;
+	sceneMesh = 0;
+	std::vector<Material>* sceneMaterials = new std::vector<Material>();
+	std::vector<IDirect3DTexture9*>* sceneTextures = new std::vector<IDirect3DTexture9*>();
+
+	// load and convert scene mesh
+	XManager::loadXFile(D3DDEVICE, "./model/testscene/BasicColumnScene.x", &tempMesh, sceneMaterials, sceneTextures);
+	/*
+	D3DVERTEXELEMENT9 elems[MAX_FVF_DECL_SIZE];
+	UINT numElems = 0;
+	HR(CustomVertex3NormalUVTangentBinormal::decl->GetDeclaration(elems, &numElems));*/
+
+	clonedTempMesh = 0;
+	HR(tempMesh->CloneMesh(D3DXMESH_MANAGED, elems, D3DDEVICE, &clonedTempMesh));
 	
 	HR(D3DXComputeTangentFrameEx(
 	  clonedTempMesh, // Input mesh
@@ -85,59 +160,77 @@ void TestApp::onCreateDevice() {
 	  &sceneMesh, // Output mesh
 	  0));         // Vertex Remapping
 
-
 	tempMesh->Release();
 	clonedTempMesh->Release();
 
+	tempMesh = 0;
+	std::vector<Material>* watcherMaterials = new std::vector<Material>();
+	std::vector<IDirect3DTexture9*>* watcherTextures = new std::vector<IDirect3DTexture9*>();
+	ID3DXMesh* watcher;
+	XManager::loadXFile(D3DDEVICE, "./model/watcher/Watcher.x", &tempMesh, watcherMaterials, watcherTextures);
+
+
+	
+	numElems = 0;
+	HR(CustomVertex3NormalUVTangentBinormal::decl->GetDeclaration(elems, &numElems));
+
+
+	HR(tempMesh->CloneMesh(D3DXMESH_MANAGED, elems, D3DDEVICE, &watcher));
+
+	std::vector<Material>* statueMaterials = new std::vector<Material>();
+	std::vector<IDirect3DTexture9*>* statueTextures = new std::vector<IDirect3DTexture9*>();
+	ID3DXMesh* statue;
+	XManager::loadXFile(D3DDEVICE, "./model/statue/statueC.x", &statue, statueMaterials, statueTextures);
+
 	mSceneEntity = new Entity<CustomVertex3NormalUVTangentBinormal>(1, sceneMesh, sceneMaterials, sceneTextures); 
-	
-	CustomTriangle<CustomVertex3NormalUVTangentBinormal>* triData = mSceneEntity->getTriangles();
-
-	std::vector<int> ints;
-	ints.push_back(2);
-	ints.push_back(8);
-	ints.push_back(3);
-	ints.push_back(6);
-
-	std::sort(ints.begin(), ints.end(), std::less<int>());
-
-	std::vector<CustomTriangle<CustomVertex3NormalUVTangentBinormal>> triVec;
-
-	char buffer[55];
-	
-
-	for(int i = 0; i < mSceneEntity->getTriangleCount(); ++i) {
-		triVec.push_back(triData[i]);
-		/*sprintf(buffer, "Triangle %d\n" ,i);
-		OutputDebugStringA(buffer);
-
-		sprintf(buffer, "Vertex1 X: %f Y: %f Z: %f\n", triData[i].mP1->pos.x, triData[i].mP1->pos.y, triData[i].mP1->pos.x);
-		OutputDebugStringA(buffer);
-		
-		sprintf(buffer, "Vertex2 X: %f Y: %f Z: %f\n", triData[i].mP2->pos.x, triData[i].mP2->pos.y, triData[i].mP2->pos.x);
-		OutputDebugStringA(buffer);
-
-		sprintf(buffer, "Vertex2 X: %f Y: %f Z: %f\n\n", triData[i].mP3->pos.x, triData[i].mP3->pos.y, triData[i].mP3->pos.x);
-		OutputDebugStringA(buffer);
-*/
-		/*if(i > mSceneEntity->getTriangleCount() / 2) {
-			 triData[i].mP1->pos.x = triData[i].mP1->pos.y = triData[i].mP1->pos.x = 0;
-		}*/
-	}
-	
-	KdTree<CustomVertex3NormalUVTangentBinormal> tree(triVec);
-
-	std::vector<D3DXVECTOR3>& bb = tree.getBoundingBoxLines();
+	mLightEntity = new Entity<CustomVertex3NormalUVTangentBinormal>(2, box);
+	mWatcherEntity = new Entity<CustomVertex3NormalUVTangentBinormal>(3, watcher, watcherMaterials, watcherTextures);
+	mStatueEntity = new Entity<CustomVertex3NormalUVTangentBinormal>(4, statue, statueMaterials, statueTextures);
+	triData = mSceneEntity->getTriangles();
 
 	
+	
+	
+
+	//char buffer[55];
+
+	//for(int i = 0; i < mSceneEntity->getTriangleCount(); ++i) {
+	//	mSceneTriangles.push_back(triData[i]);
+	//}
+
+	//KdTree<CustomVertex3NormalUVTangentBinormal> tree(mSceneTriangles);
+
+	//std::vector<D3DXVECTOR3>& bb = tree.getBoundingBoxLines();
+
+	//CustomVertex3NormalUVTangentBinormal* data = new CustomVertex3NormalUVTangentBinormal[bb.size()];
+	//
+	//for(int i = 0; i < bb.size(); ++i) {
+	//	data[i].pos = bb.at(i);
+	//}
+
+	//mBuffer = mWindow->getRenderDevice()->createVertexBuffer(bb.size(),CustomVertex3NormalUVTangentBinormal::format, "debuglines");
+	//mWindow->getRenderDevice()->setVertexBufferData("debuglines", data);
+	//
+	//CustomVertex3NormalUVTangentBinormal tri[3];
+	//tri[0].pos = triData[1].mP1->pos*150;
+	//tri[1].pos = triData[1].mP2->pos*150;
+	//tri[2].pos = triData[1].mP3->pos*150;
+
+	////tri[0].pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	////tri[1].pos = D3DXVECTOR3(5.0f, 5.0f, 0.0f);
+	////tri[2].pos = D3DXVECTOR3(10.0f, 0.0f, 0.0f);
+
+	//mSelectedTriangle = mWindow->getRenderDevice()->createVertexBuffer(3,CustomVertex3NormalUVTangentBinormal::format, "st");
+	//mWindow->getRenderDevice()->setVertexBufferData("st", tri);
+
 	// init light
 	initLight();
+
 	// texture for drawing the shadowmap
 	D3DVIEWPORT9 vp = {0, 0, 1024, 1024, 0.0f, 1.0f};
 	mShadowMap = new DrawableTexture2D(D3DDEVICE, 1024, 1024, 1, D3DFMT_R32F, true, D3DFMT_D24X8, vp, false);
 
-	// init shader handles
-	initShaderHandles();
+	
 	
 }
 
@@ -156,21 +249,118 @@ void TestApp::onUpdate() {
 }
 
 void TestApp::onRender() {
+
+
+
 	if(mWindow) {
 		mT.start();
 
 		mWindow->getRenderDevice()->getCurrentEffect()->Begin(NULL,NULL);
 		mWindow->getRenderDevice()->getCurrentEffect()->BeginPass(0);
-		
 
-		for(UINT i = 0; i < mSceneEntity->mMtrls->size(); ++i) {
+		for(UINT i = 0; i < mSceneEntity->mMtrls->size()-1; ++i) {
 			HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mMaterialHandle, &mSceneEntity->mMtrls->at(i), sizeof(Material)));
-			//HR(mWindow->getRenderDevice()->getCurrentEffect()->SetTexture(mTextureHandle, mSceneEntity->mTexs->at(i)));
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->SetTexture(mTextureHandle, mSceneEntity->mTexs->at(i)));
 			HR(mWindow->getRenderDevice()->getCurrentEffect()->CommitChanges());
 
 			mSceneEntity->mMesh->DrawSubset(i);
 		}
+
+
 		
+
+
+		D3DXMatrixScaling(&mWorld, 0.2,0.2,0.2);
+		D3DXMATRIX rot;
+		D3DXMATRIX trans;
+		//D3DXMatrixRotationX(&rot, D3DXToRadian(90));
+		
+		D3DXMatrixRotationYawPitchRoll(&rot,0,D3DXToRadian(90),0);
+		D3DXMatrixTranslation(&trans, 10, 0, 20);
+		HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mWorldHandle, &(rot*mWorld*trans), sizeof(D3DXMATRIX)));
+		HR(mWindow->getRenderDevice()->getCurrentEffect()->SetTexture(mNormalmapHandle, mNormalTextureFloor));
+		for(UINT i = 0; i < mWatcherEntity->mMtrls->size(); ++i) {
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mMaterialHandle, &mWatcherEntity->mMtrls->at(i), sizeof(Material)));
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->SetTexture(mTextureHandle, mWatcherEntity->mTexs->at(i)));
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->CommitChanges());
+
+			mWatcherEntity->mMesh->DrawSubset(i);
+		}
+		
+		D3DXMatrixIdentity(&trans);
+		D3DXMatrixTranslation(&trans, 45, 0, 45);
+		D3DXMatrixRotationYawPitchRoll(&rot,0,D3DXToRadian(90),D3DXToRadian(90));
+
+		HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mWorldHandle, &(mWorld*rot*trans), sizeof(D3DXMATRIX)));
+		for(UINT i = 0; i < mStatueEntity->mMtrls->size(); ++i) {
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mMaterialHandle, &mStatueEntity->mMtrls->at(i), sizeof(Material)));
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->SetTexture(mTextureHandle, mStatueEntity->mTexs->at(i)));
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->CommitChanges());
+
+			mStatueEntity->mMesh->DrawSubset(i);
+		}
+
+		D3DXMatrixIdentity(&trans);
+		D3DXMatrixTranslation(&trans, 45, 0, 45-20);
+
+		HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mWorldHandle, &(mWorld*rot*trans), sizeof(D3DXMATRIX)));
+		for(UINT i = 0; i < mStatueEntity->mMtrls->size(); ++i) {
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mMaterialHandle, &mStatueEntity->mMtrls->at(i), sizeof(Material)));
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->SetTexture(mTextureHandle, mStatueEntity->mTexs->at(i)));
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->CommitChanges());
+
+			mStatueEntity->mMesh->DrawSubset(i);
+		}
+
+		D3DXMatrixIdentity(&trans);
+		D3DXMatrixTranslation(&trans, 45, 0, 45-40);
+
+		HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mWorldHandle, &(mWorld*rot*trans), sizeof(D3DXMATRIX)));
+		for(UINT i = 0; i < mStatueEntity->mMtrls->size(); ++i) {
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mMaterialHandle, &mStatueEntity->mMtrls->at(i), sizeof(Material)));
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->SetTexture(mTextureHandle, mStatueEntity->mTexs->at(i)));
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->CommitChanges());
+
+			mStatueEntity->mMesh->DrawSubset(i);
+		}
+
+		D3DXMatrixIdentity(&trans);
+		D3DXMatrixTranslation(&trans, 45, 0, 45-60);
+
+		HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mWorldHandle, &(mWorld*rot*trans), sizeof(D3DXMATRIX)));
+		for(UINT i = 0; i < mStatueEntity->mMtrls->size(); ++i) {
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mMaterialHandle, &mStatueEntity->mMtrls->at(i), sizeof(Material)));
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->SetTexture(mTextureHandle, mStatueEntity->mTexs->at(i)));
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->CommitChanges());
+
+			mStatueEntity->mMesh->DrawSubset(i);
+		}
+
+		D3DXMatrixIdentity(&trans);
+		D3DXMatrixTranslation(&trans, 45, 0, 45-80);
+
+		HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mWorldHandle, &(mWorld*rot*trans), sizeof(D3DXMATRIX)));
+		for(UINT i = 0; i < mStatueEntity->mMtrls->size(); ++i) {
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mMaterialHandle, &mStatueEntity->mMtrls->at(i), sizeof(Material)));
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->SetTexture(mTextureHandle, mStatueEntity->mTexs->at(i)));
+			HR(mWindow->getRenderDevice()->getCurrentEffect()->CommitChanges());
+
+			mStatueEntity->mMesh->DrawSubset(i);
+		}
+
+		
+		D3DXMATRIX translateLight;
+		D3DXMatrixIdentity(&mWorld);
+		
+		D3DXMATRIX translate;
+		const D3DXVECTOR3& lightPos = mLightCamera->getPosition();
+		HR(mWindow->getRenderDevice()->getCurrentEffect()->SetTexture(mTextureHandle, mYellowTextureBricks));
+		D3DXMatrixTranslation(&mWorld, lightPos.x, lightPos.y, lightPos.z);
+		HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mWorldHandle, mWorld, sizeof(D3DXMATRIX)));
+		HR(mWindow->getRenderDevice()->getCurrentEffect()->CommitChanges());
+		
+		
+		mLightEntity->mMesh->DrawSubset(0);
 
 		mWindow->getRenderDevice()->getCurrentEffect()->EndPass();
 		mWindow->getRenderDevice()->getCurrentEffect()->End();
@@ -208,16 +398,46 @@ void TestApp::onKeyPressed(WPARAM keyCode) {
 	case 'Q':
 		mWireframeMode ? mWireframeMode = false : mWireframeMode = true;
 		break;
-	case VK_UP:
+	// move light up
+	case VK_NUMPAD7:
 		lightPos = mLightCamera->getPosition();
-		lightPos.x += kCameraMovementSpeed;
+		lightPos.y += kCameraMovementSpeed;
 		mLightCamera->setPosition(lightPos);
 		break;
-	case VK_SHIFT & VK_UP:
+	// move light down
+	case VK_NUMPAD9:
+		lightPos = mLightCamera->getPosition();
+		lightPos.y -= kCameraMovementSpeed;
+		mLightCamera->setPosition(lightPos);
+		break;
+	// move light forward
+	case VK_NUMPAD8:
+		lightPos = mLightCamera->getPosition();
+		lightPos.z += kCameraMovementSpeed;
+		mLightCamera->setPosition(lightPos);
+		break;
+	// move light back
+	case VK_NUMPAD2:
+		lightPos = mLightCamera->getPosition();
+		lightPos.z -= kCameraMovementSpeed;
+		mLightCamera->setPosition(lightPos);
+		break;
+	// move light left
+	case VK_NUMPAD4:
 		lightPos = mLightCamera->getPosition();
 		lightPos.x -= kCameraMovementSpeed;
 		mLightCamera->setPosition(lightPos);
 		break;
+	// move light right
+	case VK_NUMPAD6:
+		lightPos = mLightCamera->getPosition();
+		lightPos.x += kCameraMovementSpeed;
+		mLightCamera->setPosition(lightPos);
+		break;
+
+	case VK_ADD:
+		kCameraMovementSpeed += kCameraMovementSpeed;
+
 	case VK_DOWN:
 		changeDeviceInfo();
 		break;
@@ -250,10 +470,7 @@ void TestApp::onRawMouseInputReceived(RAWINPUT const& rawMouseInput) {
 		mSceneCamera->pitch(kCameraRotationSpeed*lastY);
 		mSceneCamera->yaw(kCameraRotationSpeed*lastX);
 
-		GetCursorPos(&mousePos);
-
-		sprintf(buffer, "X: %d, Y: %d\n", mousePos.x, mousePos.y);
-		OutputDebugStringA(buffer);
+		
 	}
 }
 
@@ -350,9 +567,10 @@ void TestApp::initShaderHandles() {
 
 void TestApp::setShaderData() {
 	mSceneCamera->calculateViewMatrix(mViewScene);
-	mSceneCamera->calculateProjectionMatrix(mProjectionScene);
+	mSceneCamera->calculateProjectionMatrix(mProjectionScene, 1.0f, 250.0f);
 
 	D3DXMatrixIdentity(&mWorld);
+	//D3DXMatrixScaling(&mWorld, 0.1f, 0.1f, 0.1f);
 	mWindow->getRenderDevice()->getCurrentEffect()->SetMatrix(mWorldHandle, &mWorld);
 
 	D3DXVECTOR3 lightDirW = mLightCamera->getLookAt() - mLightCamera->getPosition();
@@ -399,9 +617,65 @@ void TestApp::createShadowMap() {
 	mWindow->getRenderDevice()->getCurrentEffect()->Begin(&passCount,NULL);
 	mWindow->getRenderDevice()->getCurrentEffect()->BeginPass(0);
 
-	for(UINT i = 0; i < mSceneEntity->mMtrls->size(); ++i) {
+	for(UINT i = 0; i < mSceneEntity->mMtrls->size()-1; ++i) {
 			mSceneEntity->mMesh->DrawSubset(i);
 	}
+
+
+	D3DXMatrixScaling(&mWorld, 0.2,0.2,0.2);
+	D3DXMATRIX rot;
+	D3DXMATRIX trans;
+	D3DXMatrixRotationX(&rot, D3DXToRadian(90));
+	D3DXMatrixTranslation(&trans, 10, -10, 20);
+	HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mWorldHandle, &(mWorld*rot*trans), sizeof(D3DXMATRIX)));
+	HR(mWindow->getRenderDevice()->getCurrentEffect()->CommitChanges());
+	for(UINT i = 0; i < mWatcherEntity->mMtrls->size(); ++i) {
+			mWatcherEntity->mMesh->DrawSubset(i);
+	}
+	
+	D3DXMatrixIdentity(&trans);
+	D3DXMatrixTranslation(&trans, 45, 0, 45);
+	D3DXMatrixRotationYawPitchRoll(&rot,0,D3DXToRadian(90),D3DXToRadian(90));
+
+	HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mWorldHandle, &(mWorld*rot*trans), sizeof(D3DXMATRIX)));
+	HR(mWindow->getRenderDevice()->getCurrentEffect()->CommitChanges());
+	for(UINT i = 0; i < mStatueEntity->mMtrls->size(); ++i) {
+		mStatueEntity->mMesh->DrawSubset(i);
+	}
+
+	D3DXMatrixIdentity(&trans);
+	D3DXMatrixTranslation(&trans, 45, 0, 45-20);
+
+	HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mWorldHandle, &(mWorld*rot*trans), sizeof(D3DXMATRIX)));
+	HR(mWindow->getRenderDevice()->getCurrentEffect()->CommitChanges());
+	for(UINT i = 0; i < mStatueEntity->mMtrls->size(); ++i) {
+		mStatueEntity->mMesh->DrawSubset(i);
+	}
+
+	D3DXMatrixIdentity(&trans);
+	D3DXMatrixTranslation(&trans, 45, 0, 45-40);
+	HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mWorldHandle, &(mWorld*rot*trans), sizeof(D3DXMATRIX)));
+	HR(mWindow->getRenderDevice()->getCurrentEffect()->CommitChanges());
+	for(UINT i = 0; i < mStatueEntity->mMtrls->size(); ++i) {
+		mStatueEntity->mMesh->DrawSubset(i);
+	}
+
+	D3DXMatrixIdentity(&trans);
+	D3DXMatrixTranslation(&trans, 45, 0, 45-60);
+	HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mWorldHandle, &(mWorld*rot*trans), sizeof(D3DXMATRIX)));
+	HR(mWindow->getRenderDevice()->getCurrentEffect()->CommitChanges());
+	for(UINT i = 0; i < mStatueEntity->mMtrls->size(); ++i) {mStatueEntity->mMesh->DrawSubset(i);
+		mStatueEntity->mMesh->DrawSubset(i);
+	}
+
+	D3DXMatrixIdentity(&trans);
+	D3DXMatrixTranslation(&trans, 45, 0, 45-80);
+	HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mWorldHandle, &(mWorld*rot*trans), sizeof(D3DXMATRIX)));
+	HR(mWindow->getRenderDevice()->getCurrentEffect()->CommitChanges());
+	for(UINT i = 0; i < mStatueEntity->mMtrls->size(); ++i) {mStatueEntity->mMesh->DrawSubset(i);
+		mStatueEntity->mMesh->DrawSubset(i);
+	}
+	
 
 	mWindow->getRenderDevice()->getCurrentEffect()->EndPass();
 	mWindow->getRenderDevice()->getCurrentEffect()->End();
@@ -440,3 +714,77 @@ void TestApp::changeDeviceInfo() {
 
 	mWindow->getRenderDevice()->resetDevice(currentDevInfo);
 }
+
+//void TestApp::getMousePosition() {
+//	//char buffer[255];
+//	
+//	D3DXMATRIX matInv;
+//	
+//
+//	D3DXMatrixInverse(&matInv, NULL, &(mWorld * mViewScene));
+//
+//	POINT mousePos;
+//	GetCursorPos(&mousePos);
+//
+//	//sprintf(buffer, "x: %d y: %d\n", mousePos.x, mousePos.y);
+//
+//	HWND windowHandle = mWindow->getWindowHandle();
+//
+//	ScreenToClient(windowHandle, &mousePos);
+//
+//	//sprintf(buffer, "x: %d y: %d\n", mousePos.x, mousePos.y);
+//
+//	//OutputDebugStringA(buffer);
+//
+//	D3DXVECTOR3 worldSpaceCoordinates;
+//	D3DXVECTOR3 inputVec1(mousePos.x, mousePos.y, 0.0f);
+//	D3DXVECTOR3 inputVec2(mousePos.x, mousePos.y, 1.0f);
+//
+//	/*D3DVIEWPORT9 viewPort;
+//	mWindow->getRenderDevice()->getD3D9Device()->GetViewport(&viewPort);
+//
+//	D3DXVec3Unproject(&worldSpaceCoordinates, &inputVec1, &viewPort, &mProjectionScene, &mViewScene, &mWorld);
+//	D3DXVec3Unproject(&worldSpaceCoordinates, &inputVec2, &viewPort, &mProjectionScene, &mViewScene, &mWorld);*/
+//
+//	float xAngle = (((2.0f * mousePos.x) / 800) - 1.0f) / mProjectionScene(0, 0);
+//	float yAngle = (((-2.0f * mousePos.y) / 600) + 1.0f) / mProjectionScene(1, 1);
+//
+//
+//	//D3DXVECTOR3 origin(mousePos.x, mousePos.y, 0.0f);
+//	D3DXVECTOR3 origin(mSceneCamera->getPosition());
+//	D3DXVec3Normalize(&origin, &origin);
+//	D3DXVECTOR3 direction(xAngle, yAngle, 1.0f);
+//
+//	D3DXVec3TransformCoord(&origin, &origin, &matInv);
+//	D3DXVec3TransformNormal(&direction, &direction, &matInv);
+//	D3DXVec3Normalize(&direction, &direction);
+//
+//	bool hit = false;
+//
+//	for (int i = 0; i < mSceneTriangles.size(); ++i) {
+//		hit = D3DXIntersectTri(&mSceneTriangles[i].mP1->pos, &mSceneTriangles[i].mP2->pos, &mSceneTriangles[i].mP3->pos, &origin, &direction, NULL, NULL, NULL);
+//		if(hit) {
+//			OutputDebugStringA("HIT!!!\n");
+//
+//			CustomVertex3NormalUVTangentBinormal tri[3];
+//			tri[0].pos = triData[i].mP1->pos;
+//			tri[1].pos = triData[i].mP2->pos;
+//			tri[2].pos = triData[i].mP3->pos;
+//
+//			//tri[0].pos.z--;
+//			//tri[1].pos.z--;
+//			//tri[2].pos.z--;
+//
+//			mWindow->getRenderDevice()->setVertexBufferData("st", tri);
+//
+//			//triData[i].mP1->pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+//			////triData[i].mP1->v = 0.0f;
+//
+//			//triData[i].mP2->pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+//			////triData[i].mP2->v = 0.0f;
+//
+//			//triData[i].mP3->pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+//			////triData[i].mP3->v = 0.0f;
+//		}
+//	}
+//}

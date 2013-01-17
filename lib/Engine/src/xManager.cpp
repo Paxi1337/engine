@@ -89,12 +89,30 @@ void XManager::loadXFile(IDirect3DDevice9* dev, const std::string& filename, ID3
 			// Check if the ith material has an associative texture
 			if( d3dxmtrls[i].pTextureFilename != 0 )
 			{
-				// Yes, load the texture for the ith subset
 				IDirect3DTexture9* tex = 0;
-				char* texFN = d3dxmtrls[i].pTextureFilename;
-				HR(D3DXCreateTextureFromFile(dev, texFN, &tex));
+				std::string s(d3dxmtrls[i].pTextureFilename);
+				const char folder[] = "./texture/";
+				unsigned int pos = s.find_last_of('\/');
+				std::string newFileName(folder);
 
+				// std::string::npos gets returned if no / was found
+				if(pos != std::string::npos) {
+					//std::string sub = s.substr(pos,s.size());
+
+					if(strcmp(s.substr(pos+1,s.size()).c_str(),"Watcher.tga") == 0) {
+						newFileName.append("Watcher_Black.tga");
+					}
+					else {
+						newFileName.append(s.substr(pos+1,s.size()));
+					}
+				}
+				else {
+					
+					newFileName.append(s);
+					
+				}
 				// Save the loaded texture
+				HR(D3DXCreateTextureFromFile(dev, newFileName.c_str(), &tex));
 				texs->push_back( tex );
 			}
 			else
