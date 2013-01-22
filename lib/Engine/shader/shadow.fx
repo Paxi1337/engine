@@ -63,10 +63,9 @@ void BuildShadowMapVS(float3 posW : POSITION0,
                       out float2 depth : TEXCOORD0)
 {
 	float4x4 lightWVP = mul(gWorld, gLightVP);
-	// Render from light's perspective.
+	// rendering from light pos
 	posH = mul(float4(posW, 1.0f), lightWVP);
-	
-	// Propagate z- and w-coordinates.
+	// depth stored in z/w
 	depth = posH.zw;
 }
 
@@ -101,46 +100,47 @@ void LightShadowVS(float3 posL         : POSITION0,
 				   out float3 toEyeT   : TEXCOORD6)
 {
 
-	// Build TBN-basis.
+	// world axis in tangent space (TBN matrix)
 	float3x3 TBN;
 	TBN[0] = tangentL;
 	TBN[1] = binormalL;
 	TBN[2] = normalL;
 
-	// Matrix transforms from object space to tangent space.
+	// matrix transforms from object space to tangent space.
 	float3x3 toTangentSpace = transpose(TBN);
 
-	// Transform eye position to local space.
+	// transform eye(camera) position to local space.
 	float3 eyePosL = mul(float4(gEyePosW, 1.0f), gWorld);
 	
-	// Transform to-eye vector to tangent space.
+	// transform vertex-to-eye position vector to tangent space.
 	float3 toEyeL = eyePosL - posL;
 	toEyeT = mul(toEyeL, toTangentSpace);
 	
-	// Transform light direction to tangent space.
+	// transform light direction to tangent space.
 	float3 lightDirL = mul(float4(gLight.dirW, 0.0f), gWorld).xyz;
 	lightDirT  = mul(lightDirL, toTangentSpace);
 
 	float4x4 WVP = mul(gWorld, gVP);
 
-	// Transform to homogeneous clip space.
+	// transform to homogeneous clip space.
 	oPosH = mul(float4(posL, 1.0f), WVP);
 	
-	// Transform vertex position to world space.
+	// transform vertex position to world space.
 	oPosW = mul(float4(posL, 1.0f), gWorld).xyz;
 	
-	// Transform normal to world space (assume no non-uniform scaling).
+	// transform normal to world space (assume no non-uniform scaling)
+	// otherwise the inverse world matrix is needed
 	oNormalW = mul(float4(normalL, 0.0f), gWorld).xyz;
 	
-	// Compute the unit vector from the vertex to the eye.
+	// compute the unit vector from the vertex to the eye.
 	oToEyeW = gEyePosW - oPosW;
 	
-	// Pass on texture coords to PS
+	// pass on color texture coords to PS
 	oTex0 = tex0;
 	
 	float4x4 lightWVP = mul(gWorld, gLightVP);
 
-	// Generate projective texture coordinates.
+	// position of light is stored in projtext
 	oProjTex = mul(float4(posL, 1.0f), lightWVP);
 }
 
@@ -158,10 +158,10 @@ float4 LightShadowPS(float3 posW      : TEXCOORD0,
 	toEyeT    = normalize(toEyeT);
 	lightDirT = normalize(lightDirT);
 
-	// Light vector is opposite the direction of the light.
+	// lightvector points toward the sceen, therefore is the opposite of lights direction
 	float3 lightVecT = -lightDirT;
 	
-	// Sample normal map.
+	// sample current normal value from normal map
 	float3 normalT = tex2D(NormalMapS, tex0);
 
 	// Expand from [0, 1] compressed interval to true [-1, 1] interval.
@@ -184,11 +184,12 @@ float4 LightShadowPS(float3 posW      : TEXCOORD0,
 
 	if(s <= 0.0f)
 	     t = 0.0f;
-	
+
+
 	// Compute the ambient, diffuse and specular terms separately. 
 	float3 spec = t*(gMaterial.spec*gLight.spec).rgb;
 	float3 diffuse = s*(gMaterial.diffuse*gLight.diffuse.rgb);
-	float3 ambient = gMaterial.ambient*gLight.ambient;
+	float3 ambient = (float3(0.2f,0.2f,0.2f)*gLight.ambient)+(s/2.0f);
 	
 	// Sample decal map.
 	float4 texColor = tex2D(TexS, tex0); 
@@ -198,13 +199,13 @@ float4 LightShadowPS(float3 posW      : TEXCOORD0,
 	projTex.x =  0.5f*projTex.x + 0.5f; 
 	projTex.y = -0.5f*projTex.y + 0.5f;
 	
-	// Compute pixel depth for shadowing.
+	// depth is aquired through the normalized z coord of the current pos in lightspace 
 	float depth = projTex.z / projTex.w;
  
-	// Transform to texel space
+	// transform to texel space
     float2 texelpos = SMAP_SIZE * projTex.xy;
         
-    // Determine the lerp amounts.           
+    // get fractal part for determing lerp amounts    
     float2 lerps = frac( texelpos );
     
     // 2x2 percentage closest filter.
@@ -218,115 +219,11 @@ float4 LightShadowPS(float3 posW      : TEXCOORD0,
                               lerp( s2, s3, lerps.x ),
                               lerps.y );
 	
-	//// Light/Texture pixel.  Note that shadow coefficient only affects diffuse/spec.
+	// shadow coefficient only affects diffuse color
 	float3 litColor = ambient*texColor.rgb + shadowCoeff*(diffuse*texColor.rgb + spec);
-	//
+	
 	return float4(litColor, gMaterial.diffuse.a*texColor.a);
 }
-
-
-//struct OutputVS
-//{
-//    float4 posH      : POSITION0;
-//    float3 toEyeT    : TEXCOORD0;
-//    float3 lightDirT : TEXCOORD1;
-//    float2 tex0      : TEXCOORD2;
-//};
-//
-//
-//OutputVS LightShadowVS(float3 posL      : POSITION0,
-//					   float3 normalL   : NORMAL0,
-//					   float2 tex0      : TEXCOORD0,
-//                     float3 tangentL  : TANGENT0,
-//                     float3 binormalL : BINORMAL0,
-//                     
-//                     )
-//{
-//    // Zero out our output.
-//	OutputVS outVS = (OutputVS)0;
-//	
-//	// Build TBN-basis.
-//	float3x3 TBN;
-//	TBN[0] = tangentL;
-//	TBN[1] = binormalL;
-//	TBN[2] = normalL;
-//	
-//	// Matrix transforms from object space to tangent space.
-//	float3x3 toTangentSpace = transpose(TBN);
-//	
-//	// Transform eye position to local space.
-//	float3 eyePosL = mul(float4(gEyePosW, 1.0f), gWorld);
-//	
-//	// Transform to-eye vector to tangent space.
-//	float3 toEyeL = eyePosL - posL;
-//	outVS.toEyeT = mul(toEyeL, toTangentSpace);
-//	
-//	// Transform light direction to tangent space.
-//	float3 lightDirL = mul(float4(gLight.dirW, 0.0f), gWorld).xyz;
-//	outVS.lightDirT  = mul(lightDirL, toTangentSpace);
-//	
-//
-//	float4x4 wvp = mul(gVP, gWorld);
-//
-//	// Transform to homogeneous clip space.
-//	outVS.posH = mul(float4(posL, 1.0f), wvp);
-//	
-//	// Pass on texture coordinates to be interpolated in rasterization.
-//	outVS.tex0 = tex0;
-//	
-//	// Done--return the output.
-//    return outVS;
-//}
-//
-//float4 LightShadowPS(float3 toEyeT    : TEXCOORD0,
-//                   float3 lightDirT : TEXCOORD1,
-//                   float2 tex0      : TEXCOORD2) : COLOR
-//{
-//	// Interpolated normals can become unnormal--so normalize.
-//	toEyeT    = normalize(toEyeT);
-//	lightDirT = normalize(lightDirT);
-//	
-//	// Light vector is opposite the direction of the light.
-//	float3 lightVecT = -lightDirT;
-//	
-//	// Sample normal map.
-//	float3 normalT = tex2D(NormalMapS, tex0);
-//	
-//	// Expand from [0, 1] compressed interval to true [-1, 1] interval.
-//    normalT = 2.0f*normalT - 1.0f;
-//    
-//    // Make it a unit vector.
-//	normalT = normalize(normalT);
-//	
-//	// Compute the reflection vector.
-//	float3 r = reflect(-lightVecT, normalT);
-//	
-//	// Determine how much (if any) specular light makes it into the eye.
-//	float t  = pow(max(dot(r, toEyeT), 0.0f), gMaterial.specPower);
-//	
-//	// Determine the diffuse light intensity that strikes the vertex.
-//	float s = max(dot(lightVecT, normalT), 0.0f);
-//	
-//	// If the diffuse light intensity is low, kill the specular lighting term.
-//	// It doesn't look right to add specular light when the surface receives 
-//	// little diffuse light.
-//	if(s <= 0.0f)
-//	     t = 0.0f;
-//	
-//	// Compute the ambient, diffuse and specular terms separatly. 
-//	float3 spec = t*(gMaterial.spec*gLight.spec).rgb;
-//	float3 diffuse = s*(gMaterial.diffuse*gLight.diffuse).rgb;
-//	float3 ambient = gMaterial.ambient*gLight.ambient;
-//	
-//	// Get the texture color.
-//	float4 texColor = tex2D(TexS, tex0);
-//	
-//	// Combine the color from lighting with the texture color.
-//	float3 color = (ambient + diffuse)*texColor.rgb + spec;
-//	
-//	// Output the color and the alpha.
-//    return float4(color, gMaterial.diffuse.a*texColor.a);
-//}
 
 technique LightShadowTech
 {
