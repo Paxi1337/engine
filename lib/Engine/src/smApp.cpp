@@ -140,10 +140,7 @@ void TestApp::onCreateDevice() {
 
 	// load and convert scene mesh
 	XManager::loadXFile(D3DDEVICE, "./model/testscene/BasicColumnScene.x", &tempMesh, sceneMaterials, sceneTextures);
-	/*
-	D3DVERTEXELEMENT9 elems[MAX_FVF_DECL_SIZE];
-	UINT numElems = 0;
-	HR(CustomVertex3NormalUVTangentBinormal::decl->GetDeclaration(elems, &numElems));*/
+	
 
 	clonedTempMesh = 0;
 	HR(tempMesh->CloneMesh(D3DXMESH_MANAGED, elems, D3DDEVICE, &clonedTempMesh));
@@ -161,67 +158,38 @@ void TestApp::onCreateDevice() {
 	  0));         // Vertex Remapping
 
 	tempMesh->Release();
-	clonedTempMesh->Release();
-
 	tempMesh = 0;
+	clonedTempMesh->Release();
+	clonedTempMesh = 0;
+	
+	// loading the watcher and converting it to CustomVertex3NormalUVTangentBinormal format
 	std::vector<Material>* watcherMaterials = new std::vector<Material>();
 	std::vector<IDirect3DTexture9*>* watcherTextures = new std::vector<IDirect3DTexture9*>();
 	ID3DXMesh* watcher;
 	XManager::loadXFile(D3DDEVICE, "./model/watcher/Watcher.x", &tempMesh, watcherMaterials, watcherTextures);
-
-
-	
-	numElems = 0;
-	HR(CustomVertex3NormalUVTangentBinormal::decl->GetDeclaration(elems, &numElems));
-
-
 	HR(tempMesh->CloneMesh(D3DXMESH_MANAGED, elems, D3DDEVICE, &watcher));
 
+	tempMesh->Release();
+	tempMesh = 0;
+
+	// loading the statue and converting it to CustomVertex3NormalUVTangentBinormal format
 	std::vector<Material>* statueMaterials = new std::vector<Material>();
 	std::vector<IDirect3DTexture9*>* statueTextures = new std::vector<IDirect3DTexture9*>();
 	ID3DXMesh* statue;
-	XManager::loadXFile(D3DDEVICE, "./model/statue/statueC.x", &statue, statueMaterials, statueTextures);
+	XManager::loadXFile(D3DDEVICE, "./model/statue/statueC.x", &tempMesh, statueMaterials, statueTextures);
+	
+	HR(tempMesh->CloneMesh(D3DXMESH_MANAGED, elems, D3DDEVICE, &statue));
+
+	tempMesh->Release();
+	tempMesh = 0;
 
 	mSceneEntity = new Entity<CustomVertex3NormalUVTangentBinormal>(1, sceneMesh, sceneMaterials, sceneTextures); 
 	mLightEntity = new Entity<CustomVertex3NormalUVTangentBinormal>(2, box);
 	mWatcherEntity = new Entity<CustomVertex3NormalUVTangentBinormal>(3, watcher, watcherMaterials, watcherTextures);
+	mWatcherEntity->invertNormals();
+
 	mStatueEntity = new Entity<CustomVertex3NormalUVTangentBinormal>(4, statue, statueMaterials, statueTextures);
-	triData = mSceneEntity->getTriangles();
-
-	
-	
-	
-
-	//char buffer[55];
-
-	//for(int i = 0; i < mSceneEntity->getTriangleCount(); ++i) {
-	//	mSceneTriangles.push_back(triData[i]);
-	//}
-
-	//KdTree<CustomVertex3NormalUVTangentBinormal> tree(mSceneTriangles);
-
-	//std::vector<D3DXVECTOR3>& bb = tree.getBoundingBoxLines();
-
-	//CustomVertex3NormalUVTangentBinormal* data = new CustomVertex3NormalUVTangentBinormal[bb.size()];
-	//
-	//for(int i = 0; i < bb.size(); ++i) {
-	//	data[i].pos = bb.at(i);
-	//}
-
-	//mBuffer = mWindow->getRenderDevice()->createVertexBuffer(bb.size(),CustomVertex3NormalUVTangentBinormal::format, "debuglines");
-	//mWindow->getRenderDevice()->setVertexBufferData("debuglines", data);
-	//
-	//CustomVertex3NormalUVTangentBinormal tri[3];
-	//tri[0].pos = triData[1].mP1->pos*150;
-	//tri[1].pos = triData[1].mP2->pos*150;
-	//tri[2].pos = triData[1].mP3->pos*150;
-
-	////tri[0].pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-	////tri[1].pos = D3DXVECTOR3(5.0f, 5.0f, 0.0f);
-	////tri[2].pos = D3DXVECTOR3(10.0f, 0.0f, 0.0f);
-
-	//mSelectedTriangle = mWindow->getRenderDevice()->createVertexBuffer(3,CustomVertex3NormalUVTangentBinormal::format, "st");
-	//mWindow->getRenderDevice()->setVertexBufferData("st", tri);
+	mStatueEntity->invertNormals();
 
 	// init light
 	initLight();
@@ -229,9 +197,6 @@ void TestApp::onCreateDevice() {
 	// texture for drawing the shadowmap
 	D3DVIEWPORT9 vp = {0, 0, 1024, 1024, 0.0f, 1.0f};
 	mShadowMap = new DrawableTexture2D(D3DDEVICE, 1024, 1024, 1, D3DFMT_R32F, true, D3DFMT_D24X8, vp, false);
-
-	
-	
 }
 
 void TestApp::onResetDevice() {

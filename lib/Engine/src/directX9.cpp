@@ -60,33 +60,86 @@ void DirectX9::createDevice(HWND window) {
 	VertexDeclarations::initVertexDeclarations(mDevice);
 
 
-	// see http://www.nvidia.com/object/coverage-sampled-aa.html
 	DWORD* none = new DWORD[2];
 	none[0] = D3DMULTISAMPLE_NONE;
 	none[1] = 0;
+	mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("NONE", none));
 
-	DWORD* csaa8x = new DWORD[2];
-	csaa8x[0] = D3DMULTISAMPLE_4_SAMPLES;
-	csaa8x[1] = 2;
-	
-	DWORD* csaa8xQ = new DWORD[2];
-	csaa8xQ[0] = D3DMULTISAMPLE_8_SAMPLES;
-	csaa8xQ[1] = 0;
+	DWORD qualitylevels[10];
+	ZeroMemory(qualitylevels, sizeof(qualitylevels));
 
-	DWORD* csaa16x = new DWORD[2];
-	csaa16x[0] = D3DMULTISAMPLE_4_SAMPLES;
-	csaa16x[1] = 4;
+	result = checkMSAAModeSupport(D3DMULTISAMPLE_2_SAMPLES, qualitylevels);
+	if(result != D3D_OK) {
+		__debugbreak();
+	}
+	else {
+		DWORD* aa2 = new DWORD[2];
+		aa2[0] = D3DMULTISAMPLE_2_SAMPLES;
+		aa2[1] = 0;
+		mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("2x", aa2));
+	}
 
-	DWORD* csaa16xQ = new DWORD[2];
-	csaa16xQ[0] = D3DMULTISAMPLE_8_SAMPLES;
-	csaa16xQ[1] = 2;
+	result = checkMSAAModeSupport(D3DMULTISAMPLE_4_SAMPLES, qualitylevels);
+	if(result != D3D_OK) {
+		__debugbreak();
+	}
+	else {
+		DWORD* aa4 = new DWORD[2];
+		aa4[0] = D3DMULTISAMPLE_4_SAMPLES;
+		aa4[1] = 0;
+		mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("4x", aa4));
+	}
+
+	result = checkMSAAModeSupport(D3DMULTISAMPLE_8_SAMPLES, qualitylevels);
+	if(result != D3D_OK) {
+		__debugbreak();
+	}
+	else {
+		DWORD* aa8 = new DWORD[2];
+		aa8[0] = D3DMULTISAMPLE_8_SAMPLES;
+		aa8[1] = 0;
+		mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("8x", aa8));
+	}
+
+	result = checkMSAAModeSupport(D3DMULTISAMPLE_16_SAMPLES, qualitylevels);
+	if(result != D3D_OK) {
+		//__debugbreak();
+	}
+	else {
+		DWORD* aa16 = new DWORD[2];
+		aa16[0] = D3DMULTISAMPLE_16_SAMPLES;
+		aa16[1] = 0;
+		mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("16x", aa16));
+	}
+
+	//// see http://www.nvidia.com/object/coverage-sampled-aa.html
+	//
+
+	//DWORD* csaa8x = new DWORD[2];
+	//csaa8x[0] = D3DMULTISAMPLE_2_SAMPLES;
+	//csaa8x[1] = 0;
+	//
+	//DWORD* csaa8xQ = new DWORD[2];
+	//csaa8xQ[0] = D3DMULTISAMPLE_4_SAMPLES;
+	//csaa8xQ[1] = 0;
+
+	//DWORD* csaa16x = new DWORD[2];
+	//csaa16x[0] = D3DMULTISAMPLE_8_SAMPLES;
+	//csaa16x[1] = 0;
+
+	//DWORD* csaa16xQ = new DWORD[2];
+	//csaa16xQ[0] = D3DMULTISAMPLE_16_SAMPLES;
+	//csaa16xQ[1] = 0;
 
 	// supported MSAA modes are not checked so far (currenlty assuming the App runs under GTX680 & GTX650M)
-	mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("NONE", none));
-	mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("CSAA8x", csaa8x));
-	mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("CSAA8xQ", csaa8xQ));
-	mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("CSAA16x", csaa16x));
-	mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("CSAA16xQ", csaa16xQ));
+	
+
+
+
+	//mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("CSAA8x", csaa8x));
+	//mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("CSAA8xQ", csaa8xQ));
+	//mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("CSAA16x", csaa16x));
+	//mSupportedMSAAModes.push_back(std::pair<std::string, DWORD*>("CSAA16xQ", csaa16xQ));
 }
 
 void DirectX9::onCreateDevice() {
@@ -282,6 +335,10 @@ void DirectX9::resetDevice(D3DPRESENT_PARAMETERS* newDevInfo) {
 	if(mRunningApp) {
 		mRunningApp->onResetDevice();
 	}
+}
 
+// space for quality must be reserved before
+HRESULT DirectX9::checkMSAAModeSupport(D3DMULTISAMPLE_TYPE type, DWORD* quality) {
+	return mD3D->CheckDeviceMultiSampleType(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, mDevInfo.BackBufferFormat, TRUE, type, quality);
 }
 

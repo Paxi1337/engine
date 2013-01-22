@@ -37,6 +37,8 @@ public:
 	inline D3DPRESENT_PARAMETERS* getDeviceInfo() const { return const_cast<D3DPRESENT_PARAMETERS*>(&mDevInfo); }
 	inline const std::vector<std::pair<std::string, DWORD*>>& getMSAAModes() const { return mSupportedMSAAModes; }
 
+	HRESULT checkMSAAModeSupport(D3DMULTISAMPLE_TYPE type, DWORD* quality);
+
 	// vertex buffer functions
 	VertexbufferInfo* createVertexBuffer(const DWORD numberOfVertices, const DWORD FVF, std::string tag);
 	// the customVertex FVF has to be exactly as defined in the associated buffer 

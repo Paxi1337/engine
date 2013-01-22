@@ -189,7 +189,7 @@ float4 LightShadowPS(float3 posW      : TEXCOORD0,
 	// Compute the ambient, diffuse and specular terms separately. 
 	float3 spec = t*(gMaterial.spec*gLight.spec).rgb;
 	float3 diffuse = s*(gMaterial.diffuse*gLight.diffuse.rgb);
-	float3 ambient = (float3(0.2f,0.2f,0.2f)*gLight.ambient)+(s/2.0f);
+	float3 ambient = (gMaterial.ambient*gLight.ambient)+(s/2.0f);
 	
 	// Sample decal map.
 	float4 texColor = tex2D(TexS, tex0); 
