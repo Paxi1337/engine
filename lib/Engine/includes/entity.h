@@ -9,6 +9,8 @@ struct Entity {
 	Entity(unsigned int ID, ID3DXMesh* mesh);
 	~Entity();
 
+	void invertNormals();
+
 	CustomTriangle<CustomVertex>* getTriangles();
 	inline DWORD getTriangleCount() const { return mTriangleCount; }
 
@@ -98,6 +100,33 @@ CustomTriangle<CustomVertex>* Entity<CustomVertex>::getTriangles() {
 	}
 
 	return mTriangles;
+}
+
+template <class CustomVertex>
+void Entity<CustomVertex>::invertNormals() {
+
+	
+
+	CustomVertex* vertices;
+
+	LPDIRECT3DVERTEXBUFFER9 buffer;
+	char buffers[55];
+	
+	mMesh->GetVertexBuffer(&buffer);
+	buffer->Lock(0, mMesh->GetNumVertices()*sizeof(CustomVertex), reinterpret_cast<void**>(&vertices), 0);
+
+	//ASSERT(mMesh->GetNumVertices()*sizeof(CustomVertex)==sizeof(vertices),"fail");
+
+	for(DWORD i = 0; i < mMesh->GetNumVertices(); ++i) {
+		
+		sprintf(buffers,"%d\n", i);
+		OutputDebugStringA(buffers);
+		vertices[i].normal.x = -vertices[i].normal.x;
+		vertices[i].normal.y = -vertices[i].normal.y;
+		vertices[i].normal.z = -vertices[i].normal.z;
+	}
+	
+	buffer->Unlock();
 }
 
 template <class CustomVertex>
