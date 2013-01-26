@@ -9,6 +9,7 @@
 
 #include <vector>
 
+class Curve;
 
 class TestApp : public App {
 public:
@@ -38,7 +39,7 @@ public:
 private:
 	Window* mWindow;
 
-	VertexbufferInfo* mCube;
+	VertexbufferInfo* mCurveBuffer;
 	VertexbufferInfo* mGround;
 
 	// shader handles
@@ -71,7 +72,7 @@ private:
 	D3DXCOLOR mAmbient;
 
 	bool mWireframeMode;
-
+	bool mAnimateLight;
 	
 	Timer mT;
 	double mTimeSinceElapsedTimeReset;
@@ -97,7 +98,7 @@ private:
 
 	std::vector<CustomTriangle<CustomVertex3NormalUVTangentBinormal>> mSceneTriangles;
 
-	//void getMousePosition();
+	Curve* mCurve;
 };
 
 #endif

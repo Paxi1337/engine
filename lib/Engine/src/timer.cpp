@@ -20,7 +20,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 Timer::Timer()
 {
-#ifdef WIN32
+#ifdef _WIN32
     QueryPerformanceFrequency(&frequency);
     startCount.QuadPart = 0;
     endCount.QuadPart = 0;
@@ -52,7 +52,7 @@ Timer::~Timer()
 void Timer::start()
 {
     stopped = 0; // reset stop flag
-#ifdef WIN32
+#ifdef _WIN32
     QueryPerformanceCounter(&startCount);
 #elif defined(LINUX)
     gettimeofday(&startCount, NULL);
@@ -69,7 +69,7 @@ void Timer::stop()
 {
     stopped = 1; // set timer stopped flag
 
-#ifdef WIN32
+#ifdef _WIN32
     QueryPerformanceCounter(&endCount);
 #elif defined(LINUX)
     gettimeofday(&endCount, NULL);
@@ -84,7 +84,7 @@ void Timer::stop()
 ///////////////////////////////////////////////////////////////////////////////
 double Timer::getElapsedTimeInMicroSec()
 {
-#ifdef WIN32
+#ifdef _WIN32
     if(!stopped)
         QueryPerformanceCounter(&endCount);
 

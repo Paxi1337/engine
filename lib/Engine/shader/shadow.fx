@@ -229,7 +229,7 @@ technique LightShadowTech
 {
     pass P0
     {
-		ANTIALIASEDLINEENABLE = FALSE;
+		//ANTIALIASEDLINEENABLE = FALSE;
         // Specify the vertex and pixel shader associated with this pass.
         vertexShader = compile vs_2_0 LightShadowVS();
         pixelShader  = compile ps_2_0 LightShadowPS();

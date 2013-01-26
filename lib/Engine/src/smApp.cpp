@@ -4,6 +4,7 @@
 #include "../includes/structdeclarations.h"
 #include "../includes/scenemanager.h"
 #include "../includes/sampleShader.h"
+#include "../includes/curve.h"
 
 #include <vector>
 #include <algorithm>
@@ -13,26 +14,25 @@
 #define D3DDEVICE mWindow->getRenderDevice()->getD3D9Device()
 #define SAVEDELETE(x) { if(x) delete x; }
 
-float kCameraMovementSpeed=0.4f;
+int posCount = 0;
+float kCameraMovementSpeed=1.0f;
 const float kCameraRotationSpeed=0.01f;
 const float lightRotationSpeed=0.1f;
-
-CustomTriangle<CustomVertex3NormalUVTangentBinormal>* triData;
-
-
 
 static bool cubeInit = false;
 
 TestApp::TestApp(Window* window) : mWindow(window), 
-								   mCube(NULL),
+								   mCurveBuffer(NULL),
 								   mGround(NULL),
 								   mTimeSinceElapsedTimeReset(0.0f), 
 								   mSceneCamera(new FreeCamera(D3DXVECTOR3(0.0f, 10.0f, 0.0f))),
 								   mLightCamera(new FreeCamera(D3DXVECTOR3(0.0f, 60.0f, 130.0f))),
 								   mWireframeMode(false),
+								   mAnimateLight(false),
 								   mSceneEntity(0),
 								   mBuffer(0),
-								   mSelectedTriangle(0)
+								   mSelectedTriangle(0),
+								   mCurve(new Curve)
 {
 	mMSAAModeIterator = mWindow->getRenderDevice()->getMSAAModes().begin();
 }
@@ -45,11 +45,13 @@ TestApp::~TestApp() {
 	mWhiteTexture->Release();
 	mNormalTextureBricks->Release();
 	mNormalTextureFloor->Release();
-	
+	mYellowTextureBricks->Release();
+
 	delete mSceneEntity;
 	delete mLightEntity;
 	delete mWatcherEntity;
 	delete mStatueEntity;
+	delete mCurve;
 }
 
 void TestApp::onCreateDevice() {
@@ -72,9 +74,12 @@ void TestApp::onCreateDevice() {
 	HR(D3DXCreateTextureFromFileA(D3DDEVICE, "./texture/yellow.jpg", &mYellowTextureBricks));
 	// init meshes
 	ID3DXMesh* box;
+
 	ID3DXMesh* tempMesh = 0;
 	ID3DXMesh* sceneMesh = 0;
+
 	D3DXCreateSphere(D3DDEVICE, 3, 30, 30, &tempMesh, NULL);
+
 
 	D3DVERTEXELEMENT9 elems[MAX_FVF_DECL_SIZE];
 	UINT numElems = 0;
@@ -197,6 +202,22 @@ void TestApp::onCreateDevice() {
 	// texture for drawing the shadowmap
 	D3DVIEWPORT9 vp = {0, 0, 1024, 1024, 0.0f, 1.0f};
 	mShadowMap = new DrawableTexture2D(D3DDEVICE, 1024, 1024, 1, D3DFMT_R32F, true, D3DFMT_D24X8, vp, false);
+
+	mCurve->initCurve();
+
+	CustomVertex3NormalUVTangentBinormal* curvePoints = new CustomVertex3NormalUVTangentBinormal[mCurve->getCurvePoints().size()];
+
+	for(int i = 0; i < mCurve->getCurvePoints().size(); ++i) {
+		CustomVertex3NormalUVTangentBinormal n;
+		n.pos = mCurve->getCurvePoints()[i];
+		n.normal = D3DXVECTOR3(0.0f,1.0f,0.0f);
+		curvePoints[i] = n;
+	}
+
+	mCurveBuffer = mWindow->getRenderDevice()->createVertexBuffer(mCurve->getCurvePoints().size(), CustomVertex3NormalUVTangentBinormal::format, std::string("curve"));
+	
+	mWindow->getRenderDevice()->setVertexBufferData(std::string("curve"), curvePoints);
+
 }
 
 void TestApp::onResetDevice() {
@@ -214,14 +235,14 @@ void TestApp::onUpdate() {
 }
 
 void TestApp::onRender() {
-
-
-
 	if(mWindow) {
 		mT.start();
 
 		mWindow->getRenderDevice()->getCurrentEffect()->Begin(NULL,NULL);
 		mWindow->getRenderDevice()->getCurrentEffect()->BeginPass(0);
+
+		mWindow->getRenderDevice()->renderVertexbuffer(D3DPT_LINESTRIP, "curve");
+
 
 		for(UINT i = 0; i < mSceneEntity->mMtrls->size()-1; ++i) {
 			HR(mWindow->getRenderDevice()->getCurrentEffect()->SetValue(mMaterialHandle, &mSceneEntity->mMtrls->at(i), sizeof(Material)));
@@ -230,10 +251,6 @@ void TestApp::onRender() {
 
 			mSceneEntity->mMesh->DrawSubset(i);
 		}
-
-
-		
-
 
 		D3DXMatrixScaling(&mWorld, 0.2,0.2,0.2);
 		D3DXMATRIX rot;
@@ -331,8 +348,19 @@ void TestApp::onRender() {
 		mWindow->getRenderDevice()->getCurrentEffect()->End();
 
 		mT.stop();
-		float elapsedTime = mT.getElapsedTimeInMilliSec();
+		float elapsedTime = mT.getElapsedTime();
 		mTimeSinceElapsedTimeReset = mTimeSinceElapsedTimeReset + elapsedTime;
+
+		if(mAnimateLight) {
+			if(mTimeSinceElapsedTimeReset > 0.0005) {
+				if(posCount == 9009)
+					posCount = 0;
+
+				mLightCamera->setPosition(mCurve->getCurvePoints()[posCount]);
+				mTimeSinceElapsedTimeReset = 0;
+				posCount++;
+			}
+		}
 	}
 }
 
@@ -407,10 +435,10 @@ void TestApp::onKeyPressed(WPARAM keyCode) {
 		changeDeviceInfo();
 		break;
 	case VK_LEFT:
-		
+		mAnimateLight = true;
 		break;
 	case VK_RIGHT:
-		
+		mAnimateLight = false;
 		break;
 
 	default: break;
@@ -443,7 +471,7 @@ void TestApp::initLight() {
 	// only do this now because no of no init list
 	//memset(&mDirLight,'\0', sizeof(DirectionalLight));
 	mSpotLight.ambient = D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f);
-	mSpotLight.diffuse = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+	mSpotLight.diffuse = D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f);
 	mSpotLight.spec = D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f);
 	mSpotLight.spotPower = 0.0f;
 	//mSpotLight.posW = D3DXVECTOR3(2.0f, 2.0f, 2.0f);
